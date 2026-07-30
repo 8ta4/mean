@@ -222,7 +222,7 @@ Polling every second might overload the API.
 
 Yes.
 
-If the `mean` process quits before writing the output file, running `mean batch` again will pick up where it left off.
+If the `mean` process quits before writing the output files, running the command again will pick up where it left off.
 
 > Does `mean` write an incomplete JSON file to the current working directory?
 
