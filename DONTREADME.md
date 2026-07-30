@@ -215,3 +215,23 @@ Yes.
 The polling interval is set to 10 seconds.
 
 Polling every second might overload the API.
+
+## Resumability
+
+> Can `mean` keep going if it gets interrupted?
+
+Yes.
+
+If the `mean` process quits before writing the output file, running `mean batch` again will pick up where it left off.
+
+> Does `mean` write an incomplete JSON file to the current working directory?
+
+No.
+
+When it's gathering data, `mean` puts the growing JSON file into `~/.local/state/mean/`. `mean` only drops completed files into the current working directory when the JSON file is complete.
+
+> Does a crash during a write operation corrupt the accumulated results?
+
+No.
+
+The tool swaps in a new JSON file atomically.
