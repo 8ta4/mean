@@ -33,3 +33,21 @@ You can find the preprocessed data in the mean-data repo.
    devenv allow
    devenv shell download
    ```
+
+## Usage
+
+> How do I run `mean`?
+
+1. Open a terminal.
+
+1. Run the command.
+
+   ```bash
+   mean
+   ```
+
+Once the API batches finish, `mean` will drop two files into your current directory:
+
+- mean.json: a file that contains normalized scores
+
+- raw.json: a file that contains raw scores
