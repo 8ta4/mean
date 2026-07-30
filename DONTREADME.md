@@ -70,6 +70,20 @@ Productivity tools often cost up to $100 a month, which comes out to about $1,20
 
 ## Scoring
 
+> Can the prevalence score be negative?
+
+No, because it's a percentage.
+
+Specifically, it's the percentage of Americans 10 years or older who know the definition.
+
+- "Americans" pins it to a clear population, avoiding wishy-washy concepts like "native speakers" that are open to interpretation. Because the U.S. has the biggest number of native English speakers worldwide, it makes sense to treat it as the default audience.
+
+- "10 years or older" filters out babies, making it easier to sanity-check the model output, as super obvious definitions should hit near 100%.
+
+> Is the prevalence score an integer?
+
+Nah, it's a double. Doubles allow finer ordering.
+
 > What model does `mean` use?
 
 `mean` uses [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash) for these reasons:
@@ -101,6 +115,10 @@ Yes.
 `mean` sets the `seed` to `0`.
 
 "[When seed is fixed to a specific value, the model makes a best effort to provide the same response for repeated requests.](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/content-generation-parameters#seed)"
+
+> What's the temperature `mean` uses for scoring prevalence?
+
+`mean` runs at a temperature of 0 for scoring prevalence. The whole point is to get the model to tap into its knowledge and spit out its best estimate.
 
 > What thinking level does `mean` use?
 
