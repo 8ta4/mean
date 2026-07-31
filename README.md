@@ -53,3 +53,11 @@ Once the API batches finish, `mean` will drop two files into your current direct
 - `mean.json` maps each phrase to an array of scores ordered by how its definitions are listed in the dump.
 
 - `raw.json` contains raw score pairs for the benchmark and target scores of each sense. If you adjust the formula, you can run the normalization again without incurring another batch API charge.
+
+> Does the score array in mean.json line up with the order of English senses in the Wiktionary dump?
+
+Yes.
+
+Each score in the array matches an English sense in the order the sense appears in the Wiktionary dump.
+
+`raw.json` follows the same order.
