@@ -92,7 +92,7 @@ Nah, it's a double. Doubles allow finer ordering.
 
 - `gemini-3.5-flash` is a production model.
 
-- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.5-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
+- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.5-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark word in a fixed spot, the model's native resistance boosts confidence in the scores.
 
 - `gemini-3.5-flash` allows running at a temperature of 0.
 
@@ -158,9 +158,17 @@ How many items does each request in a batch evaluate?
 
 Each request in a batch evaluates two items:
 
-- The benchmark phrase and its sense, which set the baseline across requests.
+- The benchmark word and its sense, which set the baseline across requests.
 
 - The target phrase and its sense, which the system pulls while looping through the vocab.
+
+> What's the benchmark word?
+
+The benchmark word is "touchstone". This word was chosen because it has the following characteristics:
+
+- It is neither super common nor super obscure.
+
+- It means "benchmark".
 
 > Does `mean` use structured outputs?
 
@@ -168,17 +176,17 @@ Yes.
 
 Using structured outputs makes sure the API response includes the scoring fields `mean` needs.
 
-> Is the benchmark phrase or the target phrase scored first?
+> Is the benchmark word or the target phrase scored first?
 
-The benchmark phrase gets scored first.
+The benchmark word gets scored first.
 
-Scoring the benchmark phrase first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark phrase's context stays more alike across requests compared to using the reverse order.
+Scoring the benchmark word first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark word's context stays more alike across requests compared to using the reverse order.
 
 > Is the index of the sense in the phrase included in the model's structured output?
 
 No.
 
-The structured output is a map of the benchmark phrase and the target phrase mapped to their scores.
+The structured output is a map of the benchmark word and the target phrase mapped to their scores.
 
 The sense index is omitted from the model's output. Here's why:
 
@@ -206,13 +214,13 @@ where:
 
 - $\bar{X}$: The normalized score of the target phrase.
 
-- $B$: The score of the benchmark phrase in the current request.
+- $B$: The score of the benchmark word in the current request.
 
-- $\bar{B}$: The mean score of the benchmark phrase across all requests.
+- $\bar{B}$: The mean score of the benchmark word across all requests.
 
 It's assumed that $B \neq 0$ and $B \neq 100$. If $B$ ever hits 0 or 100, that request gets tossed.
 
-This piecewise approach ensures that scores of 0% and 100% remain unchanged, while scores near the benchmark are adjusted proportionally to the benchmark phrase's difference from its mean.
+This piecewise approach ensures that scores of 0% and 100% remain unchanged, while scores near the benchmark are adjusted proportionally to the benchmark word's difference from its mean.
 
 > Does `mean` score each phrase multiple times and average the results?
 
