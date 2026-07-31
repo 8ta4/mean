@@ -12,7 +12,7 @@ Yes.
 
 A word can have meanings with different levels of prevalence.
 
-Most folks are familiar with the everyday word "all". But not many people know `ALL` stands for acute lymphoblastic leukemia.
+Most folks are familiar with the everyday word "all". But not many people know "ALL" stands for acute lymphoblastic leukemia.
 
 ### Prevalence
 
