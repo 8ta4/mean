@@ -48,8 +48,8 @@ You can find the preprocessed data in the mean-data repo.
 
 Once the API batches finish, `mean` will drop two files into your current directory:
 
-- `manifest.json` holds the URLs and hashes for the split Wiktionary dump. The dump exceeds GitHub's file size limits.
+- `manifest.json` holds the benchmark phrase along with URLs and hashes for the split Wiktionary dump. The dump exceeds GitHub's file size limits.
 
 - `mean.json` maps each phrase to an array of scores ordered by how its definitions are listed in the dump.
 
-- `raw.json` has raw scores. If you adjust the formula, you can run the normalization again without incurring another batch API charge.
+- `raw.json` contains raw score pairs for the benchmark and target scores of each sense. If you adjust the formula, you can run the normalization again without incurring another batch API charge.
