@@ -154,13 +154,13 @@ No.
 
 Skipping parts of speech saves token usage and cuts down on prompt noise.
 
-> How many senses are sent to the LLM per rating request?
+How many items does each request in a batch evaluate?
 
-Each request includes two senses.
+Each request in a batch evaluates two items:
 
-- The benchmark phrase you give to set the baseline across requests.
+- The benchmark phrase and its sense, which set the baseline across requests.
 
-- The target phrase the system grabs while looping through the vocabulary.
+- The target phrase and its sense, which the system pulls while looping through the vocab.
 
 > Does `mean` use structured outputs?
 
