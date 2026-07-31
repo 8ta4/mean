@@ -170,6 +170,12 @@ The benchmark word is "touchstone". This word was chosen because it has the foll
 
 - It means "benchmark".
 
+> Does `mean` use the literal or figurative sense of "touchstone" as a benchmark?
+
+`mean` uses the figurative sense of "touchstone" as a benchmark.
+
+The literal meaning is a rare technical term.
+
 > Does `mean` use structured outputs?
 
 Yes.
