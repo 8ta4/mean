@@ -74,7 +74,7 @@ Productivity tools often cost up to $100 a month, which comes out to about $1,20
 
 No, because it's a percentage.
 
-Specifically, it's the percentage of Americans 10 years or older who know the definition.
+Specifically, it's the percentage of Americans 10 years or older who know each meaning.
 
 - "Americans" pins it to a clear population, avoiding wishy-washy concepts like "native speakers" that are open to interpretation. Because the U.S. has the biggest number of native English speakers worldwide, it makes sense to treat it as the default audience.
 
