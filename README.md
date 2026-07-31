@@ -48,6 +48,8 @@ You can find the preprocessed data in the mean-data repo.
 
 Once the API batches finish, `mean` will drop two files into your current directory:
 
+- manifest.json: a file that contains the dump URL and SHA-256 hash
+
 - mean.json: a file that contains normalized scores
 
 - raw.json: a file that contains raw scores
