@@ -18,7 +18,7 @@ You can find the preprocessed data in the mean-data repo.
 
 1. Install [Homebrew](https://brew.sh/#install).
 
-1. Install [devenv](https://github.com/cachix/devenv/blob/83e8d7d34bdebad98ab936b6af53d57ae67af420/docs/src/getting-started.md#installation).
+1. Install [devenv](https://github.com/cachix/devenv/blob/d0ea5226b162f4611e3541cc45547d210e83ae03/docs/src/getting-started.md#installation).
 
 1. Open a terminal.
 
