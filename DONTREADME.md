@@ -16,7 +16,7 @@ Most folks are familiar with the everyday word "all". But not many people know `
 
 ### Prevalence
 
-> Does mean measure corpus frequency?
+> Does `mean` measure corpus frequency?
 
 No.
 
@@ -92,7 +92,7 @@ Nah, it's a double. Doubles allow finer ordering.
 
 - `gemini-3.5-flash` is a production model.
 
-- Less capable models tend to change their scores dramatically if the order of phrases to evaluate gets swapped. `gemini-3.5-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
+- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.5-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
 
 - `gemini-3.5-flash` allows running at a temperature of 0.
 
@@ -106,7 +106,7 @@ Nah, it's a double. Doubles allow finer ordering.
 
 Yep.
 
-If the list of phrases contains words that sound like commands, the model could treat them as instructions rather than just stuff to score. So the system prompt makes it crystal clear what's data and what's instruction.
+If the list of senses contains words that sound like commands, the model could treat them as instructions rather than just stuff to score. So the system prompt makes it crystal clear what's data and what's instruction.
 
 > Does `mean` use a fixed `seed` for requests?
 
@@ -138,9 +138,9 @@ Yes.
 
 Using structured outputs makes sure the API response includes the scoring fields `mean` needs.
 
-> How many phrases are sent to the LLM per rating request?
+> How many senses are sent to the LLM per rating request?
 
-Each request includes two phrases.
+Each request includes two senses.
 
 - The benchmark phrase you give to set the baseline across requests.
 
@@ -188,11 +188,11 @@ But `mean` skips that. Making multiple requests per phrase incurs more API calls
 
 ## Batching
 
-> Does `mean` submit the whole list of phrases in one batch?
+> Does `mean` submit the whole list of senses in one batch?
 
 No.
 
-Submitting the whole list of phrases in one batch would exceed the enqueued token limit of Gemini's Tier 1 Batch API.
+Submitting the whole list of senses in one batch would exceed the enqueued token limit of Gemini's Tier 1 Batch API.
 
 Instead, `mean` splits the list into batches.
 
