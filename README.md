@@ -46,7 +46,7 @@ You can find the preprocessed data in the mean-data repo.
    mean
    ```
 
-Once the API batches finish, `mean` will drop two files into your current directory:
+Once the API batches finish, `mean` will drop these files into your current directory:
 
 - `manifest.json` holds the benchmark phrase along with URLs and hashes for the split Wiktionary dump. The dump exceeds GitHub's file size limits.
 
