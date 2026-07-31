@@ -132,12 +132,6 @@ Allowing thinking has these downsides:
 
 - Setting `temperature` to 0 might mess up the model's thinking, since [Gemini 3.x's reasoning capabilities are optimized for the default settings](https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5#parameter-updates:~:text=The%20following%20apply,the%20default%20settings.).
 
-> Does `mean` use structured outputs?
-
-Yes.
-
-Using structured outputs makes sure the API response includes the scoring fields `mean` needs.
-
 > Is the phrase sent to the LLM alongside its sense?
 
 Yes.
@@ -168,11 +162,31 @@ Each request includes two senses.
 
 - The target phrase the system grabs while looping through the vocabulary.
 
+> Does `mean` use structured outputs?
+
+Yes.
+
+Using structured outputs makes sure the API response includes the scoring fields `mean` needs.
+
 > Is the benchmark phrase or the target phrase scored first?
 
 The benchmark phrase gets scored first.
 
 Scoring the benchmark phrase first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark phrase's context stays more alike across requests compared to using the reverse order.
+
+> Is the index of the sense in the phrase included in the model's structured output?
+
+No.
+
+The structured output is a map of the benchmark phrase and the target phrase mapped to their scores.
+
+The sense index is omitted from the model's output. Here's why:
+
+- It cuts down on output tokens.
+
+- It helps the model focus on scoring the phrases.
+
+The index is tracked outside the structured output, using the metadata key instead.
 
 > What's the normalization formula?
 
