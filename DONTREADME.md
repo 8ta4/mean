@@ -138,6 +138,28 @@ Yes.
 
 Using structured outputs makes sure the API response includes the scoring fields `mean` needs.
 
+> Is the phrase sent to the LLM alongside its sense?
+
+Yes.
+
+A sense alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical sense text.
+
+> Are nested senses concatenated?
+
+Yes.
+
+Nested senses are concatenated with a newline and a single space.
+
+Punctuation can show up in the sense text. That's why punctuation isn't used as a delimiter.
+
+Sense text can include colons. Indenting sense lines with a single space keeps the model from mixing up internal colons with structural fields.
+
+> Is the part of speech sent to the LLM?
+
+No.
+
+Skipping parts of speech saves token usage and cuts down on prompt noise.
+
 > How many senses are sent to the LLM per rating request?
 
 Each request includes two senses.
