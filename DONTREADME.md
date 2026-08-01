@@ -252,7 +252,7 @@ Tier 2 boosts the token limit a lot. But Tier 2 requires [a $100 payment and
 
 No.
 
-`mean` processes batches sequentially. That way, I dodge the headache of tracking a bunch of active batch names.
+`mean` processes batches sequentially, staying near the rate limit for each batch. High throughput, with only one batch name to track at a time, feels like a batch made in heaven.
 
 > Does `mean` wait for a batch to finish?
 
