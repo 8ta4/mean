@@ -248,7 +248,7 @@ Instead, `mean` splits the list into batches.
 
 Tier 2 boosts the token limit a lot. But Tier 2 requires [a three‑day waiting period after your first payment](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Paid%20%24100%20%2B%203%20days%20from%20first%20successful%20payment). `mean` is designed to work on Tier 1, so you can use the tool immediately.
 
-On top of that, evaluating the dataset costs more than $200. On Tier 2, the rolling 10-minute spend limit is $200. So the workload is safer when processed across multiple batches, regardless of whether you're on Tier 1 or Tier 2.
+On Tier 2, the rolling 10-minute spend limit is [$200](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Tier%202-,%24200,-Tier%203). It probably costs over $200 to evaluate the dataset. So the workload is safer when processed across multiple batches, regardless of whether you're on Tier 1 or Tier 2.
 
 > Does `mean` send multiple batches simultaneously?
 
