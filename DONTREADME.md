@@ -238,29 +238,21 @@ But `mean` skips that. Making multiple requests per phrase incurs more API calls
 
 ## Batching
 
-> Does `mean` submit the whole list of senses in one batch?
-
-No.
-
-Submitting the whole list of senses in one batch would exceed the enqueued token limit of Gemini's Tier 1 Batch API.
-
-Instead, `mean` splits the list into batches.
-
-Tier 2 boosts the token limit a lot. But Tier 2 requires [a three‑day waiting period after your first payment](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Paid%20%24100%20%2B%203%20days%20from%20first%20successful%20payment). `mean` is designed to work on Tier 1, so you can use the tool immediately.
-
-On Tier 2, the rolling 10-minute spend limit is [$200](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Tier%202-,%24200,-Tier%203). It probably costs over $200 to evaluate the dataset. So the workload is safer when processed across multiple batches, regardless of whether you're on Tier 1 or Tier 2.
-
-> Does `mean` send multiple batches simultaneously?
-
-No.
-
-`mean` processes batches sequentially, staying near the rate limit for each batch. High throughput, with only one batch name to track at a time, feels like a batch made in heaven.
-
-> Does `mean` wait for a batch to finish?
+> Does `mean` send the entire list of senses in one batch?
 
 Yes.
 
-`mean` stays running in the terminal to monitor the active batch. When the batch finishes, `mean` downloads the results, merges them, and submits the next batch if there's another one.
+Submitting the entire list in one go works within the token and file size limits of Gemini's Tier 2 Batch API.
+
+You'll need to put down $100 to unlock Tier 2. But evaluating the full dataset will cost more than that anyway.
+
+You could hit a spend-based rate limit. But the happy path just runs the single batch without having to split the workload across multiple requests.
+
+> Does `mean` wait for the batch to finish?
+
+Yes.
+
+`mean` stays running in the terminal to monitor the batch. When the batch is done, `mean` processes the results into the output files.
 
 > What's the polling interval?
 
