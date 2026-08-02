@@ -209,6 +209,7 @@ It's piecewise:
 $$
 \bar{X} =
 \begin{cases}
+0 & \text{if } X = 0 \\
 \frac{X \cdot \bar{B}}{B} & \text{if } X \leq B \\
 100 - \frac{(100 - X)(100 - \bar{B})}{100 - B} & \text{if } X > B
 \end{cases}
@@ -223,8 +224,6 @@ where:
 - $B$: The score of the benchmark word in the current request.
 
 - $\bar{B}$: The mean score of the benchmark word across all requests.
-
-It's assumed that $B \neq 0$ and $B \neq 100$. If $B$ ever hits 0 or 100, the pair gets dropped during normalization.
 
 This piecewise approach ensures that scores of 0% and 100% remain unchanged, while scores near the benchmark are adjusted proportionally to the benchmark word's difference from its mean.
 
