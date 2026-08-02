@@ -238,21 +238,45 @@ But `mean` skips that. Making multiple requests per phrase incurs more API calls
 
 ## Batching
 
-> Does `mean` send the entire list of senses in one batch?
+> Does `mean` automatically loop to submit multiple batches?
+
+No.
+
+`mean` submits at most one batch per command invocation.
+
+If an error occurs, loops on large datasets can cause runaway billing. When some senses don't have scores, you can manually run `mean` again.
+
+> Does `mean` require Tier 2?
 
 Yes.
 
-Submitting the entire list in one go works within the token and file size limits of Gemini's Tier 2 Batch API.
+Tier 1 limits enqueued tokens for `gemini-3.5-flash` to 3,000,000 and caps the spend at $10 per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
 
-You'll need to put down $100 to unlock Tier 2. But evaluating the full dataset will cost more than that anyway.
+Tier 2 bumps the limits for `gemini-3.5-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this huge boost cuts down on how many manual runs we need and speeds up the turnaround from weeks to just days.
 
-You could hit a spend-based rate limit. But the happy path just runs the single batch without having to split the workload across multiple requests.
+To unlock Tier 2 you need to pay $100 up front, but the full data set will probably cost more than $100 anyway.
+
+> Does `mean` send the scored senses to the API?
+
+No.
+
+`mean` checks the cache and filters out senses that already have a score.
+
+If a batch only partially finishes, you can manually check the cache before running `mean` again.
+
+> Where's the cache?
+
+The cache lives in `~/.local/state/mean/cache.json`.
 
 > Does `mean` wait for the batch to finish?
 
 Yes.
 
-`mean` stays running in the terminal to monitor the batch. When the batch is done, `mean` processes the results into the output files.
+`mean` stays running in the terminal to monitor the active batch.
+
+If the batch completes successfully, `mean` processes the results into the output files.
+
+If the batch only partially succeeds, `mean` saves the completed results to the cache and exits. You can check the cache before you run `mean` again.
 
 > What's the polling interval?
 
