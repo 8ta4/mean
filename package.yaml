@@ -21,6 +21,7 @@ description: Please see the README on GitHub at <https://github.com/githubuser/m
 
 dependencies:
   - base >= 4.7 && < 5
+  - relude
 
 ghc-options:
   # https://github.com/purescript/purescript/blob/cb3c4965c8468d26c9b14cf0319db6dbd06ee4ff/purescript.cabal#L57-L89
@@ -57,6 +58,39 @@ ghc-options:
   - -Wno-missing-kind-signatures
   - -Wno-partial-fields
   - -Wno-missing-role-annotations
+
+# https://github.com/purescript/purescript/blob/cb3c4965c8468d26c9b14cf0319db6dbd06ee4ff/purescript.cabal#L91-L121
+default-extensions:
+  - BangPatterns
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveFunctor
+  - DeriveFoldable
+  - DeriveTraversable
+  - DeriveGeneric
+  - DerivingStrategies
+  - DerivingVia
+  - EmptyDataDecls
+  - FlexibleContexts
+  - FlexibleInstances
+  - GeneralizedNewtypeDeriving
+  - ImportQualifiedPost
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - NamedFieldPuns
+  - NoImplicitPrelude
+  - PatternGuards
+  - PatternSynonyms
+  - RankNTypes
+  - RecordWildCards
+  - OverloadedRecordDot
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - TupleSections
+  - TypeFamilies
+  - ViewPatterns
 
 library:
   source-dirs: src
