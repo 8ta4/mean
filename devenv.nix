@@ -34,6 +34,8 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+    export PATH="$HOME/.ghcup/bin:$PATH"
+    ghcup install stack 3.11.1
   '';
 
   # https://devenv.sh/tasks/
