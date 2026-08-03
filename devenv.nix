@@ -9,9 +9,11 @@
 
   # https://devenv.sh/packages/
   packages = [
+    pkgs.ghcid
     pkgs.git
     pkgs.gitleaks
     pkgs.pre-commit
+    pkgs.rubyPackages.solargraph
   ];
 
   # https://devenv.sh/languages/
@@ -28,11 +30,22 @@
   scripts.hello.exec = ''
     echo hello from $GREET
   '';
+  scripts.watch.exec = ''
+    ghcid -a \
+    -c 'stack ghci' \
+    --no-height-limit \
+    -r \
+    -s ':set -Wprepositive-qualified-module' \
+    -W
+  '';
 
   # https://devenv.sh/basics/
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+    export PATH="$HOME/.ghcup/bin:$PATH"
+    ghcup install stack 3.11.1
+    ghcup install hls 2.14.0.0
   '';
 
   # https://devenv.sh/tasks/
@@ -58,6 +71,7 @@
       entry = "bash -c 'exec gitleaks git --redact --staged --verbose'";
     };
     nixfmt.enable = true;
+    ormolu.enable = true;
     prettier.enable = true;
     trim-trailing-whitespace.enable = true;
   };
