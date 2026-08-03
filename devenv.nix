@@ -59,6 +59,7 @@
     };
     nixfmt.enable = true;
     prettier.enable = true;
+    trim-trailing-whitespace.enable = true;
   };
 
   # See full reference at https://devenv.sh/reference/options/
