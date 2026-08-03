@@ -58,6 +58,7 @@
       entry = "bash -c 'exec gitleaks git --redact --staged --verbose'";
     };
     nixfmt.enable = true;
+    prettier.enable = true;
   };
 
   # See full reference at https://devenv.sh/reference/options/
