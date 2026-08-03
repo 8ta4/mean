@@ -61,6 +61,7 @@
       entry = "bash -c 'exec gitleaks git --redact --staged --verbose'";
     };
     nixfmt.enable = true;
+    ormolu.enable = true;
     prettier.enable = true;
     trim-trailing-whitespace.enable = true;
   };
