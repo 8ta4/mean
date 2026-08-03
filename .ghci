@@ -1,0 +1,9 @@
+-- https://github.com/ndmitchell/ghcid/blob/4f575946cca8984c8eb87d521d539f954dfb9dee/README.md#i-only-see-source-spans-or-colors-on-errorswarnings-after-the-first-load
+:set -fdiagnostics-color=always
+:set -ferror-spans
+:set -Wno-missing-home-modules
+-- ghcid crashes without this line.
+-- The project's `-Weverything` flag enables the `-Wprepositive-qualified-module` warning.
+-- GHCi can trigger this warning internally, and the resulting error causes ghcid to crash.
+-- This command disables only that specific warning to prevent the crash.
+:set -Wno-prepositive-qualified-module
