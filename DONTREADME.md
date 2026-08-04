@@ -56,17 +56,17 @@ Non-lemma forms are evaluated for these reasons:
 
 - Throwing in non-lemma forms doesn't blow up the dataset size by a factor of ten.
 
-> Does `mean` evaluate empty glosses?
+> Does `mean` evaluate empty raw glosses?
 
 No.
 
-`mean` drops senses with empty glosses for these reasons:
+`mean` drops senses with empty raw glosses for these reasons:
 
-- Under 0.1% of English senses don't have glosses.
+- Under 0.1% of English senses don't have raw glosses.
 
-- Evaluating a sense without glosses can inflate its score because the model might mix up a rare sense with the phrase's usual meaning.
+- Evaluating a sense without raw glosses can inflate its score because the model might mix up a rare sense with the phrase's usual meaning.
 
-- Including examples or other fields to infer missing glosses may increase token usage and add extra prompt noise across requests.
+- Including examples or other fields to infer missing raw glosses may increase token usage and add extra prompt noise across requests.
 
 > Does `mean` evaluate Wikipedia entries?
 
@@ -200,19 +200,19 @@ The benchmark word gets scored first.
 
 Scoring the benchmark word first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark word's context stays more alike across requests compared to using the reverse order.
 
-> Are the concatenated glosses included in the model's structured output?
+> Are the concatenated raw glosses included in the model's structured output?
 
 No.
 
 The structured output is an object that maps the benchmark word and the target phrase to their scores.
 
-The concatenated glosses are omitted from the model's output. Here's why:
+The concatenated raw glosses are omitted from the model's output. Here's why:
 
 - It cuts down on output tokens.
 
 - It helps the model focus on scoring the phrases.
 
-The concatenated glosses are tracked outside the structured output, using the metadata key instead.
+The concatenated raw glosses are tracked outside the structured output, using the metadata key instead.
 
 > What's the normalization formula?
 
