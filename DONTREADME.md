@@ -56,6 +56,18 @@ Non-lemma forms are evaluated for these reasons:
 
 - Throwing in non-lemma forms doesn't blow up the dataset size by a factor of ten.
 
+> Does `mean` evaluate empty glosses?
+
+No.
+
+`mean` drops senses with empty glosses for these reasons:
+
+- Under 0.1% of English senses don't have glosses.
+
+- Evaluating a sense without glosses can inflate its score because the model might mix up a rare sense with the phrase's usual meaning.
+
+- Including examples or other fields to infer missing glosses may increase token usage and add extra prompt noise across requests.
+
 > Does `mean` evaluate Wikipedia entries?
 
 Yes. `mean` scores Wikipedia entries by treating their lead sentences as senses.
