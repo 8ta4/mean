@@ -188,19 +188,19 @@ The benchmark word gets scored first.
 
 Scoring the benchmark word first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark word's context stays more alike across requests compared to using the reverse order.
 
-> Is the index of the sense in the phrase included in the model's structured output?
+> Are the concatenated glosses included in the model's structured output?
 
 No.
 
-The structured output is a map of the benchmark word and the target phrase mapped to their scores.
+The structured output is an object that maps the benchmark word and the target phrase to their scores.
 
-The sense index is omitted from the model's output. Here's why:
+The concatenated glosses are omitted from the model's output. Here's why:
 
 - It cuts down on output tokens.
 
 - It helps the model focus on scoring the phrases.
 
-The index is tracked outside the structured output, using the metadata key instead.
+The concatenated glosses are tracked outside the structured output, using the metadata key instead.
 
 > What's the normalization formula?
 
