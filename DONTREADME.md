@@ -251,7 +251,7 @@ Yes.
 
 Tier 1 limits enqueued tokens for `gemini-3.5-flash` to 3,000,000 and caps the spend at $10 per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
 
-Tier 2 bumps the limits for `gemini-3.5-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this huge boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days.
+Tier 2 bumps the limits for `gemini-3.5-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days.
 
 To unlock Tier 2 you need to pay $100 up front, but the full data set will probably cost more than $100 anyway.
 
