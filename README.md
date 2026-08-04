@@ -1,6 +1,6 @@
 # mean
 
-## It depends on what the meaning of "is" is.
+## It depends on what the meaning of the word "is" is.
 
 > What's this tool about?
 
