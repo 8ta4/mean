@@ -46,7 +46,7 @@ Wiktionary was chosen for these reasons:
 
 - The coverage is extensive.
 
-> Does `mean` evaluate senses of non-lemma forms?
+> Can `mean` evaluate senses of non-lemma forms?
 
 Yes. `mean` looks at both lemma and non‑lemma forms.
 
