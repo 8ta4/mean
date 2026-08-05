@@ -11,6 +11,7 @@ isEnglish entry = case entry ^? key "lang" . _String of
   Just "English" -> True
   _ -> False
 
+processEntry :: Value -> [Value]
 processEntry entry = case entry ^? key "word" . _String of
   Just _ -> case entry ^? key "senses" . values . key "raw_glosses" . values . _String of
     Just _ -> []
