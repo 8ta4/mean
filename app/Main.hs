@@ -6,6 +6,7 @@ import Data.Aeson.Lens (key, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Relude
 
+isEnglish :: Value -> Bool
 isEnglish entry = case entry ^? key "lang" . _String of
   Just "English" -> True
   _ -> False
