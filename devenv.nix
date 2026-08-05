@@ -43,6 +43,7 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+    brew bundle
     export PATH="$HOME/.ghcup/bin:$PATH"
     ghcup install stack 3.11.1
     ghcup install hls 2.14.0.0
