@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Control.Lens ((^?))
+import Control.Lens ((^..), (^?))
 import Data.Aeson (Value, decode)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
@@ -13,9 +13,7 @@ isEnglish entry = case entry ^? key "lang" . _String of
 
 processEntry :: Value -> [Value]
 processEntry entry = case entry ^? key "word" . _String of
-  Just _ -> case entry ^? key "senses" . values . key "raw_glosses" . values . _String of
-    Just _ -> []
-    _ -> []
+  Just _ -> entry ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
 main :: IO ()
