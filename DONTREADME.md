@@ -150,15 +150,15 @@ Yes.
 
 A sense alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical sense text.
 
-> Are nested senses concatenated?
+> Are nested raw glosses concatenated?
 
 Yes.
 
-Nested senses are concatenated with a newline and a single space.
+Nested raw glosses get joined using a newline because of these reasons:
 
-Punctuation can show up in the sense text. That's why punctuation isn't used as a delimiter.
+- For prompts, a newline gives a clear grammatical break so the glosses don't blend together and mess up the grammar.
 
-Sense text can include colons. Indenting sense lines with a single space keeps the model from mixing up internal colons with structural fields.
+- For JSON keys, a newline creates a unique key since raw glosses don't contain newlines.
 
 > Is the part of speech sent to the LLM?
 
@@ -173,6 +173,12 @@ Each request in a batch evaluates two items:
 - The benchmark word and its sense, which set the baseline across requests.
 
 - The target phrase and its sense, which the system pulls while looping through the vocab.
+
+> Does `mean` use JSON in a prompt to format the phrases and senses for evaluation?
+
+No.
+
+`mean` puts each item on its own line as an EDN map, which helps save token usage.
 
 > What's the benchmark word?
 
