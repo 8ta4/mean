@@ -3,4 +3,6 @@ module Main (main) where
 import Relude
 
 main :: IO ()
-main = pure ()
+main = do
+  content <- readFileLBS "raw-wiktextract-data.jsonl"
+  pure ()
