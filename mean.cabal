@@ -68,6 +68,8 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , lens
+    , lens-aeson
     , relude
   default-language: Haskell2010
 
@@ -115,6 +117,8 @@ executable mean-exe
       aeson
     , base >=4.7 && <5
     , bytestring
+    , lens
+    , lens-aeson
     , mean
     , relude
   default-language: Haskell2010
@@ -164,6 +168,8 @@ test-suite mean-test
       aeson
     , base >=4.7 && <5
     , bytestring
+    , lens
+    , lens-aeson
     , mean
     , relude
   default-language: Haskell2010
