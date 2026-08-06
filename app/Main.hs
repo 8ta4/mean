@@ -45,7 +45,11 @@ makePayload phrase gloss =
                           ["text" .= (renderEdn benchmarkPhrase benchmarkGloss <> "\n" <> renderEdn phrase gloss)]
                       ]
                ]
-           ]
+           ],
+      "generation_config"
+        .= object
+          [ "max_output_tokens" .= (100 :: Int)
+          ]
     ]
 
 renderEdn :: Text -> Text -> Text
