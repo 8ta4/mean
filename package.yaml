@@ -21,7 +21,14 @@ description: Please see the README on GitHub at <https://github.com/githubuser/m
 
 dependencies:
   - base >= 4.7 && < 5
+  - aeson
+  - bytestring
+  - directory
+  - filepath
+  - lens-aeson
+  - lens
   - relude
+  - req
 
 ghc-options:
   # https://github.com/purescript/purescript/blob/cb3c4965c8468d26c9b14cf0319db6dbd06ee4ff/purescript.cabal#L57-L89
