@@ -32,7 +32,11 @@ makePayload phrase gloss =
   object
     [ "contents"
         .= [ object
-               []
+               [ "parts"
+                   .= [ object
+                          []
+                      ]
+               ]
            ]
     ]
 
