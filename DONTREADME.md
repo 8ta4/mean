@@ -144,6 +144,12 @@ Allowing thinking has these downsides:
 
 - Setting `temperature` to 0 might mess up the model's thinking, since [Gemini 3.x's reasoning capabilities are optimized for the default settings](https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5#parameter-updates:~:text=The%20following%20apply,the%20default%20settings.).
 
+> Does `mean` set `max_output_tokens`?
+
+Yes.
+
+`mean` sets `max_output_tokens` to 128. The longest English phrase in Wiktionary by character count is "when you're up to your neck in alligators, it's hard to remember that your initial objective was to drain the swamp". It takes 51 output tokens to evaluate this phrase. Setting the limit to 128 gives you enough headroom to avoid truncation and acts as a safety net against runaway billing.
+
 > Is the phrase sent to the LLM alongside its sense?
 
 Yes.
