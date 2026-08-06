@@ -5,7 +5,7 @@ import Data.Aeson (Value, decode, object)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, Scheme (Https), header)
+import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
 import Relude
 import System.Directory (getHomeDirectory)
 import System.FilePath ((</>))
@@ -38,3 +38,9 @@ loadApiKeyHeader = do
   home <- getHomeDirectory
   apiKey <- readFileBS $ home </> ".config/mean/key"
   pure $ header "x-goog-api-key" apiKey
+
+baseUrl :: Url 'Https
+baseUrl = https "generativelanguage.googleapis.com" /: "v1beta"
+
+model :: Text
+model = "gemini-3.5-flash"
