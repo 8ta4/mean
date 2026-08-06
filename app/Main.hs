@@ -24,14 +24,14 @@ isEnglish entry = case entry ^? key "lang" . _String of
 
 processEntry :: Value -> [Value]
 processEntry entry = case entry ^? key "word" . _String of
-  Just phrase -> makePayload phrase <$> joinGlosses <$> (entry ^.. key "senses" . values . key "raw_glosses")
+  Just phrase -> makePayload phrase <$> joinGlosses <$> entry ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
 makePayload :: Text -> Text -> Value
 makePayload phrase gloss = object []
 
 joinGlosses :: Value -> Text
-joinGlosses = (Text.intercalate "\n") <$> (^.. key "raw_glosses" . values . _String)
+joinGlosses = Text.intercalate "\n" <$> (^.. key "raw_glosses" . values . _String)
 
 loadApiKeyHeader :: IO (Option 'Https)
 loadApiKeyHeader = do
