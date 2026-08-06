@@ -55,13 +55,16 @@ makePayload phrase gloss =
             -- To ensure the schema is applied correctly, we use snake_case (`response_json_schema`).
             "response_json_schema"
               .= object
-                [ "properties"
+                [ "additional_properties" .= False,
+                  "properties"
                     .= object
                       [ fromText benchmarkPhrase
                           .= percentageSchema,
                         fromText phrase
                           .= percentageSchema
                       ],
+                  "property_ordering" .= [fromText benchmarkPhrase, fromText phrase],
+                  "required" .= [fromText benchmarkPhrase, fromText phrase],
                   "type" .= ("object" :: Text)
                 ],
             "thinking_config"
