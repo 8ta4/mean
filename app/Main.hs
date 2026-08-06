@@ -2,6 +2,7 @@ module Main where
 
 import Control.Lens ((^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, object)
+import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
@@ -50,6 +51,19 @@ makePayload phrase gloss =
         .= object
           [ "max_output_tokens" .= (100 :: Int),
             "response_mime_type" .= ("application/json" :: Text),
+            -- Using camelCase (`responseJsonSchema`) causes the Gemini Batch API to generate incorrect properties in the output.
+            -- To ensure the schema is applied correctly, we use snake_case (`response_json_schema`).
+            "response_json_schema"
+              .= object
+                [ "properties"
+                    .= object
+                      [ fromText benchmarkPhrase
+                          .= percentageSchema,
+                        fromText phrase
+                          .= percentageSchema
+                      ],
+                  "type" .= ("object" :: Text)
+                ],
             "thinking_config"
               .= object
                 ["thinking_level" .= ("MINIMAL" :: Text)]
@@ -61,6 +75,14 @@ makePayload phrase gloss =
                      ["text" .= systemPrompt]
                  ]
           ]
+    ]
+
+percentageSchema :: Value
+percentageSchema =
+  object
+    [ "maximum" .= (100 :: Int),
+      "minimum" .= (0 :: Int),
+      "type" .= ("number" :: Text)
     ]
 
 renderEdn :: Text -> Text -> Text
