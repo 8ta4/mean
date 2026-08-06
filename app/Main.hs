@@ -49,6 +49,7 @@ makePayload phrase gloss =
       "generation_config"
         .= object
           [ "max_output_tokens" .= (100 :: Int),
+            "response_mime_type" .= ("application/json" :: Text),
             "thinking_config"
               .= object
                 ["thinking_level" .= ("MINIMAL" :: Text)]
