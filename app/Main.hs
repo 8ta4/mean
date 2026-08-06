@@ -52,6 +52,13 @@ makePayload phrase gloss =
             "thinking_config"
               .= object
                 ["thinking_level" .= ("MINIMAL" :: Text)]
+          ],
+      "system_instruction"
+        .= object
+          [ "parts"
+              .= [ object
+                     ["text" .= systemPrompt]
+                 ]
           ]
     ]
 
@@ -63,6 +70,9 @@ benchmarkPhrase = "touchstone"
 
 benchmarkGloss :: Text
 benchmarkGloss = "(figurative, by extension) A standard of comparison or evaluation."
+
+systemPrompt :: Text
+systemPrompt = "Estimate the percentage of Americans 10 years or older who know each meaning."
 
 joinGlosses :: Value -> Text
 joinGlosses = Text.intercalate "\n" <$> (^.. key "raw_glosses" . values . _String)
