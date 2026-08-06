@@ -14,12 +14,20 @@ main :: IO ()
 main = do
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   _ <- loadApiKeyHeader
-  let _ :: [Value] = (filter isEnglish $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  let _ :: [Value] = (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
   pure ()
+
+isTarget :: Value -> Bool
+isTarget entry = isEnglish entry && isNotBenchmark entry
 
 isEnglish :: Value -> Bool
 isEnglish entry = case entry ^? key "lang" . _String of
   Just "English" -> True
+  _ -> False
+
+isNotBenchmark :: Value -> Bool
+isNotBenchmark entry = case entry ^? key "word" . _String of
+  Just phrase -> benchmarkPhrase /= phrase
   _ -> False
 
 processEntry :: Value -> [Value]
