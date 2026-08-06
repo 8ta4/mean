@@ -67,6 +67,8 @@ makePayload phrase gloss =
                   "required" .= [fromText benchmarkPhrase, fromText phrase],
                   "type" .= ("object" :: Text)
                 ],
+            "seed" .= (0 :: Int),
+            "temperature" .= (0 :: Int),
             "thinking_config"
               .= object
                 ["thinking_level" .= ("MINIMAL" :: Text)]
