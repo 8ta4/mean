@@ -42,11 +42,14 @@ makePayload phrase gloss =
         .= [ object
                [ "parts"
                    .= [ object
-                          []
+                          ["text" .= (renderEdn benchmarkPhrase benchmarkGloss <> "\n" <> renderEdn phrase gloss)]
                       ]
                ]
            ]
     ]
+
+renderEdn :: Text -> Text -> Text
+renderEdn phrase gloss = "{:phrase " <> show phrase <> " :sense " <> show gloss <> "}"
 
 benchmarkPhrase :: Text
 benchmarkPhrase = "touchstone"
