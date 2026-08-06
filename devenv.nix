@@ -33,6 +33,9 @@
   scripts.hello.exec = ''
     echo hello from $GREET
   '';
+  scripts.mean.exec = ''
+    stack run
+  '';
   scripts.mean-watch.exec = ''
     ghcid -a \
     -c 'stack ghci' \
