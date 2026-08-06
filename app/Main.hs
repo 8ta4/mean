@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Lens ((^..), (^?))
-import Data.Aeson (Value, decode, object)
+import Data.Aeson (KeyValue ((.=)), Value, decode, object)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
@@ -28,7 +28,13 @@ processEntry entry = case entry ^? key "word" . _String of
   _ -> []
 
 makePayload :: Text -> Text -> Value
-makePayload phrase gloss = object []
+makePayload phrase gloss =
+  object
+    [ "contents"
+        .= [ object
+               []
+           ]
+    ]
 
 joinGlosses :: Value -> Text
 joinGlosses = Text.intercalate "\n" <$> (^.. key "raw_glosses" . values . _String)
