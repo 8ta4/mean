@@ -33,13 +33,16 @@
   scripts.hello.exec = ''
     echo hello from $GREET
   '';
-  scripts.watch.exec = ''
+  scripts.mean-watch.exec = ''
     ghcid -a \
     -c 'stack ghci' \
     --no-height-limit \
     -r \
     -s ':set -Wprepositive-qualified-module' \
     -W
+  '';
+  scripts.test-watch.exec = ''
+    stack test --file-watch
   '';
 
   # https://devenv.sh/basics/
