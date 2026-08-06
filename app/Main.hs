@@ -1,4 +1,4 @@
-module Main (main) where
+module Main where
 
 import Control.Lens ((^..), (^?))
 import Data.Aeson (Value, decode, object)

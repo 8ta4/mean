@@ -1,4 +1,9 @@
+module Spec where
+
+import Main (loadApiKeyHeader)
 import Relude
 
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  _ <- loadApiKeyHeader
+  pure ()
