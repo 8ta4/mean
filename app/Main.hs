@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Lens ((^..), (^?))
-import Data.Aeson (KeyValue ((.=)), Value, decode, object)
+import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
@@ -22,36 +22,11 @@ main = do
   batchExists <- doesFileExist batchIdPath
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
-  runReq defaultHttpConfig $ do
-    response <-
-      req
-        POST
-        batchUrl
-        (ReqBodyJson $ makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry)
-        jsonResponse
-        apiKeyHeader
-    case (responseBody response :: Value) ^? key "name" . _String of
-      Just name -> writeFileText batchIdPath $ (splitOn "/" name) !! 1
-      _ -> pure ()
+  let _ = Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  pure ()
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
-
-makeBatchPayload :: [Value] -> Value
-makeBatchPayload requests =
-  object
-    [ "batch"
-        .= object
-          [ "input_config"
-              .= object
-                [ "requests"
-                    .= object
-                      [ "requests"
-                          .= requests
-                      ]
-                ]
-          ]
-    ]
 
 isTarget :: Value -> Bool
 isTarget entry = isEnglish entry && isNotBenchmark entry
@@ -66,18 +41,19 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
   Just phrase -> benchmarkPhrase /= phrase
   _ -> False
 
-processEntry :: Value -> [Value]
+processEntry :: Value -> [Char8.ByteString]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
-    ( \gloss ->
-        object
-          [ "metadata"
-              .= object
-                [ "key" .= gloss
-                ],
-            "request" .= makeRequestPayload phrase gloss
-          ]
-    )
+    encode
+      <$> ( \gloss ->
+              object
+                [ "metadata"
+                    .= object
+                      [ "key" .= gloss
+                      ],
+                  "request" .= makeRequestPayload phrase gloss
+                ]
+          )
       <$> joinGlosses
       <$> entry
       ^.. key "senses" . values . key "raw_glosses"
