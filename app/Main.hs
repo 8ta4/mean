@@ -21,6 +21,12 @@ main = do
   let batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   batchExists <- doesFileExist batchIdPath
+  if batchExists
+    then do
+      batchId <- readFileBS batchIdPath
+      pure ()
+    else
+      pure ()
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
   temporaryDirectory <- getTemporaryDirectory
