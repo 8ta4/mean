@@ -6,7 +6,7 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
+import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, runReq, (/:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
@@ -24,6 +24,15 @@ main = do
   let inputPath = temporaryDirectory </> "input.jsonl"
   writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
   fileSize <- getFileSize inputPath
+  let uploadHeaders =
+        apiKeyHeader
+          <> header "X-Goog-Upload-Protocol" "resumable"
+          <> header "X-Goog-Upload-Command" "start"
+          <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
+          <> header "X-Goog-Upload-Header-Content-Type" "application/json"
+  _ <-
+    runReq defaultHttpConfig
+      $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse uploadHeaders
   pure ()
 
 batchUrl :: Url 'Https
@@ -133,7 +142,10 @@ loadApiKeyHeader = do
   pure $ header "x-goog-api-key" apiKey
 
 baseUrl :: Url 'Https
-baseUrl = https "generativelanguage.googleapis.com" /: "v1beta"
+baseUrl = host /: "v1beta"
+
+host :: Url 'Https
+host = https "generativelanguage.googleapis.com"
 
 model :: Text
 model = "gemini-3.5-flash"
