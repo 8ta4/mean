@@ -2,7 +2,7 @@ module Main where
 
 import Control.Concurrent (threadDelay)
 import Control.Lens ((^..), (^?))
-import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
+import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
@@ -144,13 +144,16 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
   Just phrase -> benchmarkPhrase /= phrase
   _ -> False
 
+renderJson :: (ToJSON a) => a -> Text
+renderJson = decodeUtf8 <$> encode
+
 processEntry :: Value -> [Char8.ByteString]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
     encode
       <$> ( \gloss ->
               object
-                [ "key" .= gloss,
+                [ "key" .= renderJson [phrase, gloss],
                   "request" .= makeRequestPayload phrase gloss
                 ]
           )
