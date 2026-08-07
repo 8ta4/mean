@@ -5,6 +5,8 @@ import Data.Aeson (KeyValue ((.=)), Value, decode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
+import Data.List ((!!))
+import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
 import Relude
@@ -15,6 +17,7 @@ main :: IO ()
 main = do
   home <- getHomeDirectory
   let statePath = home </> ".local/state/mean"
+  let batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
@@ -26,7 +29,9 @@ main = do
         (ReqBodyJson $ makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry)
         jsonResponse
         apiKeyHeader
-    let _ = responseBody response :: Value
+    case (responseBody response :: Value) ^? key "name" . _String of
+      Just name -> writeFileText batchIdPath $ (splitOn "/" name) !! 1
+      _ -> pure ()
     pure ()
   pure ()
 
