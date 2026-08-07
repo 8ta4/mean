@@ -32,8 +32,6 @@ main = do
     case (responseBody response :: Value) ^? key "name" . _String of
       Just name -> writeFileText batchIdPath $ (splitOn "/" name) !! 1
       _ -> pure ()
-    pure ()
-  pure ()
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
