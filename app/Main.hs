@@ -49,7 +49,7 @@ makePayload phrase gloss =
            ],
       "generation_config"
         .= object
-          [ "max_output_tokens" .= (100 :: Int),
+          [ "max_output_tokens" .= (2 :: Int) ^ (7 :: Int),
             "response_mime_type" .= ("application/json" :: Text),
             -- Using camelCase (`responseJsonSchema`) causes the Gemini Batch API to generate incorrect properties in the output.
             -- To ensure the schema is applied correctly, we use snake_case (`response_json_schema`).
