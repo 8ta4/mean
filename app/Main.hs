@@ -10,7 +10,7 @@ import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
 import Relude
-import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory)
+import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
 
 main :: IO ()
@@ -22,8 +22,9 @@ main = do
   batchExists <- doesFileExist batchIdPath
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
-  let _ = Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
-  pure ()
+  temporaryDirectory <- getTemporaryDirectory
+  let inputPath = temporaryDirectory </> "input.jsonl"
+  writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
@@ -47,10 +48,7 @@ processEntry entry = case entry ^? key "word" . _String of
     encode
       <$> ( \gloss ->
               object
-                [ "metadata"
-                    .= object
-                      [ "key" .= gloss
-                      ],
+                [ "key" .= gloss,
                   "request" .= makePayload phrase gloss
                 ]
           )
