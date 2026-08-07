@@ -8,11 +8,14 @@ import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
 import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
 import Relude
-import System.Directory (getHomeDirectory)
+import System.Directory (createDirectoryIfMissing, getHomeDirectory)
 import System.FilePath ((</>))
 
 main :: IO ()
 main = do
+  home <- getHomeDirectory
+  let statePath = home </> ".local/state/mean"
+  createDirectoryIfMissing True statePath
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
   runReq defaultHttpConfig $ do
