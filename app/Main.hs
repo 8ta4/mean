@@ -64,7 +64,10 @@ processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
     ( \gloss ->
         object
-          [ "key" .= gloss,
+          [ "metadata"
+              .= object
+                [ "key" .= gloss
+                ],
             "request" .= makeRequestPayload phrase gloss
           ]
     )
