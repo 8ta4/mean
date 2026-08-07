@@ -5,10 +5,8 @@ import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
-import Data.List ((!!))
-import Data.Text (splitOn)
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
+import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
