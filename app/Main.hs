@@ -8,7 +8,8 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
-import Data.Map.Lazy (lookup)
+import Data.Map.Lazy (insertWith, lookup, singleton, union)
+import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
@@ -39,7 +40,7 @@ main = do
                 NoReqBody
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
-          let _ = mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
+          writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
           pure ()
         _ -> pure ()
       pure ()
@@ -101,6 +102,9 @@ main = do
       pure ()
     _ -> pure ()
   pure ()
+
+insertScore :: Map Text (Map Text (Double, Double)) -> (Text, Text, Double, Double) -> Map Text (Map Text (Double, Double))
+insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
