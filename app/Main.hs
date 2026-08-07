@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Concurrent
-import Control.Lens ((^..), (^?))
+import Control.Lens ((^.), (^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
@@ -91,7 +91,9 @@ poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
   response <- runReq defaultHttpConfig request
   case (responseBody response) ^? key "metadata" . key "state" . _String of
-    Just "BATCH_STATE_SUCCEEDED" -> pure $ Just ""
+    Just "BATCH_STATE_SUCCEEDED" ->
+      pure $ (responseBody response)
+        ^? key "response" . key "responsesFile" . _String
     Just "BATCH_STATE_RUNNING" -> liftIO $ do
       threadDelay 10000000
       poll request
