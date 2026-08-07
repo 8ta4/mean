@@ -6,7 +6,7 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, runReq, (/:))
+import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseHeader, runReq, (/:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
@@ -30,9 +30,12 @@ main = do
           <> header "X-Goog-Upload-Command" "start"
           <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
           <> header "X-Goog-Upload-Header-Content-Type" "application/json"
-  _ <-
+  initialResponse <-
     runReq defaultHttpConfig
       $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse uploadHeaders
+  case responseHeader initialResponse "x-goog-upload-url" of
+    Just uploadUrl -> pure ()
+    _ -> pure ()
   pure ()
 
 batchUrl :: Url 'Https
