@@ -6,7 +6,7 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
+import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
 import Relude
 import System.Directory (getHomeDirectory)
 import System.FilePath ((</>))
@@ -14,9 +14,21 @@ import System.FilePath ((</>))
 main :: IO ()
 main = do
   content <- readFileLBS "raw-wiktextract-data.jsonl"
-  _ <- loadApiKeyHeader
-  let _ = makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  apiKeyHeader <- loadApiKeyHeader
+  runReq defaultHttpConfig $ do
+    response <-
+      req
+        POST
+        batchUrl
+        (ReqBodyJson $ makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry)
+        jsonResponse
+        apiKeyHeader
+    let _ = responseBody response :: Value
+    pure ()
   pure ()
+
+batchUrl :: Url 'Https
+batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
 
 makeBatchPayload :: [Value] -> Value
 makeBatchPayload requests =
