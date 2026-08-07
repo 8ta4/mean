@@ -27,6 +27,7 @@ dependencies:
   - filepath
   - lens-aeson
   - lens
+  - modern-uri
   - relude
   - req
 

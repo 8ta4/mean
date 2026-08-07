@@ -6,10 +6,11 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseHeader, runReq, (/:))
+import Network.HTTP.Req (Option, POST (POST), ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
+import Text.URI (mkURI)
 
 main :: IO ()
 main = do
@@ -34,7 +35,26 @@ main = do
     runReq defaultHttpConfig
       $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse initialHeaders
   case responseHeader initialResponse "x-goog-upload-url" of
-    Just uploadUrl -> pure ()
+    Just uploadUrlHeader -> do
+      uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
+      case useHttpsURI uploadUri of
+        Just (uploadUrl, uploadOptions) -> do
+          uploadResponse <-
+            runReq defaultHttpConfig
+              $ req
+                POST
+                uploadUrl
+                (ReqBodyFile inputPath)
+                jsonResponse
+                ( apiKeyHeader
+                    <> header "X-Goog-Upload-Offset" "0"
+                    <> header "X-Goog-Upload-Command" "upload, finalize"
+                    <> uploadOptions
+                )
+          let _ :: Value = responseBody uploadResponse
+          pure ()
+        _ -> pure ()
+      pure ()
     _ -> pure ()
   pure ()
 
