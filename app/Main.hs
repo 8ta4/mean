@@ -1,16 +1,14 @@
 module Main where
 
 import Control.Lens ((^..), (^?))
-import Data.Aeson (KeyValue ((.=)), Value, decode, object)
+import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
-import Data.List ((!!))
-import Data.Text (splitOn)
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, POST (POST), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, jsonResponse, req, responseBody, runReq, (/:))
+import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
 import Relude
-import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory)
+import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
 
 main :: IO ()
@@ -22,36 +20,12 @@ main = do
   batchExists <- doesFileExist batchIdPath
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
-  runReq defaultHttpConfig $ do
-    response <-
-      req
-        POST
-        batchUrl
-        (ReqBodyJson $ makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry)
-        jsonResponse
-        apiKeyHeader
-    case (responseBody response :: Value) ^? key "name" . _String of
-      Just name -> writeFileText batchIdPath $ (splitOn "/" name) !! 1
-      _ -> pure ()
+  temporaryDirectory <- getTemporaryDirectory
+  let inputPath = temporaryDirectory </> "input.jsonl"
+  writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
-
-makeBatchPayload :: [Value] -> Value
-makeBatchPayload requests =
-  object
-    [ "batch"
-        .= object
-          [ "input_config"
-              .= object
-                [ "requests"
-                    .= object
-                      [ "requests"
-                          .= requests
-                      ]
-                ]
-          ]
-    ]
 
 isTarget :: Value -> Bool
 isTarget entry = isEnglish entry && isNotBenchmark entry
@@ -66,25 +40,23 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
   Just phrase -> benchmarkPhrase /= phrase
   _ -> False
 
-processEntry :: Value -> [Value]
+processEntry :: Value -> [Char8.ByteString]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
-    ( \gloss ->
-        object
-          [ "metadata"
-              .= object
-                [ "key" .= gloss
-                ],
-            "request" .= makeRequestPayload phrase gloss
-          ]
-    )
+    encode
+      <$> ( \gloss ->
+              object
+                [ "key" .= gloss,
+                  "request" .= makePayload phrase gloss
+                ]
+          )
       <$> joinGlosses
       <$> entry
       ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
-makeRequestPayload :: Text -> Text -> Value
-makeRequestPayload phrase gloss =
+makePayload :: Text -> Text -> Value
+makePayload phrase gloss =
   object
     [ "contents"
         .= [ object
