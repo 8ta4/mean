@@ -26,7 +26,10 @@ main = do
   if batchExists
     then do
       batchId <- readFileBS batchIdPath
-      _ <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
+      maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
+      case maybeResponsesFile of
+        Just responsesFile -> pure ()
+        _ -> pure ()
       pure ()
     else
       pure ()
