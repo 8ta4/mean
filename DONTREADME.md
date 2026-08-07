@@ -279,18 +279,6 @@ Tier 2 bumps the limits for `gemini-3.5-flash` up by roughly an order of magni
 
 To unlock Tier 2 you need to pay $100 up front, but the full data set will probably cost more than $100 anyway.
 
-> Does `mean` send the scored senses to the API?
-
-No.
-
-`mean` checks the cache and filters out senses that already have a score.
-
-If a batch only partially finishes, you can manually check the cache before running `mean` again.
-
-> Where's the cache?
-
-The cache lives in `~/.local/state/mean/cache.json`.
-
 > Does `mean` wait for the batch to finish?
 
 Yes.
@@ -298,8 +286,6 @@ Yes.
 `mean` stays running in the terminal to monitor the active batch.
 
 If the batch completes successfully, `mean` processes the results into the output files.
-
-If the batch only partially succeeds, `mean` saves the completed results to the cache and exits. You can check the cache before you run `mean` again.
 
 > What's the polling interval?
 
