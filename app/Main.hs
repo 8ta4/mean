@@ -95,8 +95,14 @@ poll request = do
   response <- runReq defaultHttpConfig request
   case (responseBody response) ^? key "metadata" . key "state" . _String of
     Just "BATCH_STATE_SUCCEEDED" ->
-      pure $ (responseBody response)
-        ^? key "response" . key "responsesFile" . _String
+      pure
+        $ (!! 1)
+        <$> (splitOn "/")
+        <$> (responseBody response)
+        ^? key
+          "response"
+          . key "responsesFile"
+          . _String
     Just "BATCH_STATE_RUNNING" -> liftIO $ do
       threadDelay 10000000
       poll request
