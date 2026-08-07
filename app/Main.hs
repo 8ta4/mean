@@ -41,7 +41,6 @@ main = do
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
           writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
-          pure ()
         _ -> pure ()
       pure ()
     else
