@@ -37,6 +37,7 @@ main = do
                 NoReqBody
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
+          let _ :: [Value] = mapMaybe decode $ Char8.lines $ responseBody downloadResponse
           pure ()
         _ -> pure ()
       pure ()
