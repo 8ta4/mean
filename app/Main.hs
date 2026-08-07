@@ -15,8 +15,24 @@ main :: IO ()
 main = do
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   _ <- loadApiKeyHeader
-  let _ = (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  let _ = makeBatchPayload $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
   pure ()
+
+makeBatchPayload :: [Value] -> Value
+makeBatchPayload requests =
+  object
+    [ "batch"
+        .= object
+          [ "input_config"
+              .= object
+                [ "requests"
+                    .= object
+                      [ "requests"
+                          .= requests
+                      ]
+                ]
+          ]
+    ]
 
 isTarget :: Value -> Bool
 isTarget entry = isEnglish entry && isNotBenchmark entry
