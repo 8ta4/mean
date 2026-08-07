@@ -112,7 +112,7 @@ systemPrompt :: Text
 systemPrompt = "Estimate the percentage of Americans 10 years or older who know each meaning."
 
 joinGlosses :: Value -> Text
-joinGlosses = Text.intercalate "\n" <$> (^.. key "raw_glosses" . values . _String)
+joinGlosses = Text.intercalate "\n" <$> (^.. values . _String)
 
 loadApiKeyHeader :: IO (Option 'Https)
 loadApiKeyHeader = do
