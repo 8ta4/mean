@@ -1,7 +1,7 @@
 module Main where
 
-import Control.Concurrent
-import Control.Lens (traversed, (^.), (^..), (^?))
+import Control.Concurrent (threadDelay)
+import Control.Lens ((^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
