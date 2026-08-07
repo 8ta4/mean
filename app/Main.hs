@@ -24,7 +24,7 @@ main = do
   let inputPath = temporaryDirectory </> "input.jsonl"
   writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
   fileSize <- getFileSize inputPath
-  let uploadHeaders =
+  let initialHeaders =
         apiKeyHeader
           <> header "X-Goog-Upload-Protocol" "resumable"
           <> header "X-Goog-Upload-Command" "start"
@@ -32,7 +32,7 @@ main = do
           <> header "X-Goog-Upload-Header-Content-Type" "application/json"
   initialResponse <-
     runReq defaultHttpConfig
-      $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse uploadHeaders
+      $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse initialHeaders
   case responseHeader initialResponse "x-goog-upload-url" of
     Just uploadUrl -> pure ()
     _ -> pure ()
