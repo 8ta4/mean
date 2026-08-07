@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Lens ((^..), (^?))
+import Control.Lens ((^.), (^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
@@ -51,7 +51,9 @@ main = do
                     <> header "X-Goog-Upload-Command" "upload, finalize"
                     <> uploadOptions
                 )
-          let _ :: Value = responseBody uploadResponse
+          case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
+            Just _ -> pure ()
+            _ -> pure ()
           pure ()
         _ -> pure ()
       pure ()
