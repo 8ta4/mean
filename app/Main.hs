@@ -33,7 +33,16 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
 
 processEntry :: Value -> [Value]
 processEntry entry = case entry ^? key "word" . _String of
-  Just phrase -> makePayload phrase <$> joinGlosses <$> entry ^.. key "senses" . values . key "raw_glosses"
+  Just phrase ->
+    ( \gloss ->
+        object
+          [ "key" .= gloss,
+            "request" .= makePayload phrase gloss
+          ]
+    )
+      <$> joinGlosses
+      <$> entry
+      ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
 makePayload :: Text -> Text -> Value
