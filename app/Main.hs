@@ -1,7 +1,7 @@
 module Main where
 
-import Control.Concurrent
-import Control.Lens ((^.), (^..), (^?))
+import Control.Concurrent (threadDelay)
+import Control.Lens ((^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
@@ -9,7 +9,7 @@ import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
 import Data.Text (splitOn)
 import Data.Text qualified as Text
-import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
+import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
@@ -28,7 +28,16 @@ main = do
       batchId <- readFileBS batchIdPath
       maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
       case maybeResponsesFile of
-        Just responsesFile -> pure ()
+        Just responsesFile -> do
+          downloadResponse <-
+            runReq defaultHttpConfig
+              $ req
+                GET
+                (host /: "download" /: "v1beta" /: "files" /: (responsesFile <> ":download"))
+                NoReqBody
+                lbsResponse
+                (apiKeyHeader <> "alt" =: ("media" :: Text))
+          pure ()
         _ -> pure ()
       pure ()
     else
