@@ -5,6 +5,8 @@ import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
+import Data.List ((!!))
+import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (Option, POST (POST), ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
 import Relude
@@ -33,7 +35,12 @@ main = do
           <> header "X-Goog-Upload-Header-Content-Type" "application/json"
   initialResponse <-
     runReq defaultHttpConfig
-      $ req POST (host /: "upload" /: "v1beta" /: "files") (ReqBodyJson $ object []) ignoreResponse initialHeaders
+      $ req
+        POST
+        (host /: "upload" /: "v1beta" /: "files")
+        (ReqBodyJson $ object [])
+        ignoreResponse
+        initialHeaders
   case responseHeader initialResponse "x-goog-upload-url" of
     Just uploadUrlHeader -> do
       uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
@@ -52,13 +59,36 @@ main = do
                     <> uploadOptions
                 )
           case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
-            Just _ -> pure ()
+            Just filename -> do
+              batchResponse <-
+                runReq defaultHttpConfig
+                  $ req
+                    POST
+                    batchUrl
+                    (ReqBodyJson $ makeBatchPayload filename)
+                    jsonResponse
+                    apiKeyHeader
+              case (responseBody batchResponse :: Value) ^? key "name" . _String of
+                Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                _ -> pure ()
+              pure ()
             _ -> pure ()
           pure ()
         _ -> pure ()
       pure ()
     _ -> pure ()
   pure ()
+
+makeBatchPayload :: Text -> Value
+makeBatchPayload filename =
+  object
+    [ "batch"
+        .= object
+          [ "input_config"
+              .= object
+                ["file_name" .= filename]
+          ]
+    ]
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
@@ -83,7 +113,7 @@ processEntry entry = case entry ^? key "word" . _String of
       <$> ( \gloss ->
               object
                 [ "key" .= gloss,
-                  "request" .= makePayload phrase gloss
+                  "request" .= makeRequestPayload phrase gloss
                 ]
           )
       <$> joinGlosses
@@ -91,8 +121,8 @@ processEntry entry = case entry ^? key "word" . _String of
       ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
-makePayload :: Text -> Text -> Value
-makePayload phrase gloss =
+makeRequestPayload :: Text -> Text -> Value
+makeRequestPayload phrase gloss =
   object
     [ "contents"
         .= [ object
