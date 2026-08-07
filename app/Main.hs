@@ -1,12 +1,14 @@
 module Main where
 
 import Control.Concurrent (threadDelay)
-import Control.Lens ((^..), (^?))
-import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, encode, object)
+import Control.Lens (to, (^..), (^?))
+import Control.Lens.Prism (_Just)
+import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
+import Data.Map.Lazy (lookup)
 import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
@@ -37,7 +39,7 @@ main = do
                 NoReqBody
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
-          let _ :: [Value] = mapMaybe decode $ Char8.lines $ responseBody downloadResponse
+          let _ = mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
           pure ()
         _ -> pure ()
       pure ()
@@ -117,6 +119,25 @@ poll request = do
       threadDelay 10000000
       poll request
     _ -> pure Nothing
+
+parseResult :: Value -> Maybe (Text, Text, Double, Double)
+parseResult line = do
+  scores <-
+    line
+      ^? key "response"
+        . key "candidates"
+        . values
+        . key "content"
+        . key "parts"
+        . values
+        . key "text"
+        . _String
+        . to decodeStrictText
+        . _Just
+  keyPair <- line ^? key "key" . _String . to decodeStrictText . _Just
+  targetScore <- lookup (keyPair !! 0) scores
+  benchmarkScore <- lookup benchmarkPhrase scores
+  pure $ ((keyPair !! 0), (keyPair !! 1), benchmarkScore, targetScore)
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
