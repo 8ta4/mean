@@ -1,15 +1,18 @@
 module Main where
 
-import Control.Lens ((^..), (^?))
+import Control.Lens ((^.), (^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
+import Data.List ((!!))
+import Data.Text (splitOn)
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
+import Network.HTTP.Req (Option, POST (POST), ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
 import Relude
-import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory, getTemporaryDirectory)
+import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
+import Text.URI (mkURI)
 
 main :: IO ()
 main = do
@@ -23,6 +26,69 @@ main = do
   temporaryDirectory <- getTemporaryDirectory
   let inputPath = temporaryDirectory </> "input.jsonl"
   writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  fileSize <- getFileSize inputPath
+  let initialHeaders =
+        apiKeyHeader
+          <> header "X-Goog-Upload-Protocol" "resumable"
+          <> header "X-Goog-Upload-Command" "start"
+          <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
+          <> header "X-Goog-Upload-Header-Content-Type" "application/json"
+  initialResponse <-
+    runReq defaultHttpConfig
+      $ req
+        POST
+        (host /: "upload" /: "v1beta" /: "files")
+        (ReqBodyJson $ object [])
+        ignoreResponse
+        initialHeaders
+  case responseHeader initialResponse "x-goog-upload-url" of
+    Just uploadUrlHeader -> do
+      uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
+      case useHttpsURI uploadUri of
+        Just (uploadUrl, uploadOptions) -> do
+          uploadResponse <-
+            runReq defaultHttpConfig
+              $ req
+                POST
+                uploadUrl
+                (ReqBodyFile inputPath)
+                jsonResponse
+                ( apiKeyHeader
+                    <> header "X-Goog-Upload-Offset" "0"
+                    <> header "X-Goog-Upload-Command" "upload, finalize"
+                    <> uploadOptions
+                )
+          case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
+            Just filename -> do
+              batchResponse <-
+                runReq defaultHttpConfig
+                  $ req
+                    POST
+                    batchUrl
+                    (ReqBodyJson $ makeBatchPayload filename)
+                    jsonResponse
+                    apiKeyHeader
+              case (responseBody batchResponse :: Value) ^? key "name" . _String of
+                Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                _ -> pure ()
+              pure ()
+            _ -> pure ()
+          pure ()
+        _ -> pure ()
+      pure ()
+    _ -> pure ()
+  pure ()
+
+makeBatchPayload :: Text -> Value
+makeBatchPayload filename =
+  object
+    [ "batch"
+        .= object
+          [ "input_config"
+              .= object
+                ["file_name" .= filename]
+          ]
+    ]
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
@@ -47,7 +113,7 @@ processEntry entry = case entry ^? key "word" . _String of
       <$> ( \gloss ->
               object
                 [ "key" .= gloss,
-                  "request" .= makePayload phrase gloss
+                  "request" .= makeRequestPayload phrase gloss
                 ]
           )
       <$> joinGlosses
@@ -55,8 +121,8 @@ processEntry entry = case entry ^? key "word" . _String of
       ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
-makePayload :: Text -> Text -> Value
-makePayload phrase gloss =
+makeRequestPayload :: Text -> Text -> Value
+makeRequestPayload phrase gloss =
   object
     [ "contents"
         .= [ object
@@ -131,7 +197,10 @@ loadApiKeyHeader = do
   pure $ header "x-goog-api-key" apiKey
 
 baseUrl :: Url 'Https
-baseUrl = https "generativelanguage.googleapis.com" /: "v1beta"
+baseUrl = host /: "v1beta"
+
+host :: Url 'Https
+host = https "generativelanguage.googleapis.com"
 
 model :: Text
 model = "gemini-3.5-flash"
