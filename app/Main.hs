@@ -15,7 +15,7 @@ main :: IO ()
 main = do
   content <- readFileLBS "raw-wiktextract-data.jsonl"
   _ <- loadApiKeyHeader
-  let _ :: [Value] = (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  let _ = (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
   pure ()
 
 isTarget :: Value -> Bool
