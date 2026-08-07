@@ -8,7 +8,7 @@ import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Text qualified as Text
 import Network.HTTP.Req (Option, Scheme (Https), Url, header, https, (/:))
 import Relude
-import System.Directory (createDirectoryIfMissing, doesFileExist, getHomeDirectory, getTemporaryDirectory)
+import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
 
 main :: IO ()
@@ -23,6 +23,8 @@ main = do
   temporaryDirectory <- getTemporaryDirectory
   let inputPath = temporaryDirectory </> "input.jsonl"
   writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+  fileSize <- getFileSize inputPath
+  pure ()
 
 batchUrl :: Url 'Https
 batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
