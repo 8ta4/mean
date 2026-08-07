@@ -51,7 +51,7 @@ processEntry entry = case entry ^? key "word" . _String of
                     .= object
                       [ "key" .= gloss
                       ],
-                  "request" .= makeRequestPayload phrase gloss
+                  "request" .= makePayload phrase gloss
                 ]
           )
       <$> joinGlosses
@@ -59,8 +59,8 @@ processEntry entry = case entry ^? key "word" . _String of
       ^.. key "senses" . values . key "raw_glosses"
   _ -> []
 
-makeRequestPayload :: Text -> Text -> Value
-makeRequestPayload phrase gloss =
+makePayload :: Text -> Text -> Value
+makePayload phrase gloss =
   object
     [ "contents"
         .= [ object
