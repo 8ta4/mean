@@ -5,7 +5,7 @@ import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
-import Data.Aeson.Lens (key, values, _String)
+import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
 import Data.Map.Lazy (insertWith, lookup, singleton, union)
@@ -128,10 +128,10 @@ parseResult line = do
     line
       ^? key "response"
         . key "candidates"
-        . values
+        . nth 0
         . key "content"
         . key "parts"
-        . values
+        . nth 0
         . key "text"
         . _String
         . to decodeStrictText
