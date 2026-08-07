@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Concurrent
 import Control.Lens ((^.), (^..), (^?))
 import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
 import Data.Aeson.Key (fromText)
@@ -8,7 +9,7 @@ import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
 import Data.Text (splitOn)
 import Data.Text qualified as Text
-import Network.HTTP.Req (Option, POST (POST), ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
+import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
@@ -21,8 +22,18 @@ main = do
   let batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   batchExists <- doesFileExist batchIdPath
-  content <- readFileLBS "raw-wiktextract-data.jsonl"
   apiKeyHeader <- loadApiKeyHeader
+  if batchExists
+    then do
+      batchId <- readFileBS batchIdPath
+      maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
+      case maybeResponsesFile of
+        Just responsesFile -> pure ()
+        _ -> pure ()
+      pure ()
+    else
+      pure ()
+  content <- readFileLBS "raw-wiktextract-data.jsonl"
   temporaryDirectory <- getTemporaryDirectory
   let inputPath = temporaryDirectory </> "input.jsonl"
   writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
@@ -78,6 +89,24 @@ main = do
       pure ()
     _ -> pure ()
   pure ()
+
+poll :: Req (JsonResponse Value) -> IO (Maybe Text)
+poll request = do
+  response <- runReq defaultHttpConfig request
+  case (responseBody response) ^? key "metadata" . key "state" . _String of
+    Just "BATCH_STATE_SUCCEEDED" ->
+      pure
+        $ (!! 1)
+        <$> (splitOn "/")
+        <$> (responseBody response)
+        ^? key
+          "response"
+          . key "responsesFile"
+          . _String
+    Just "BATCH_STATE_RUNNING" -> liftIO $ do
+      threadDelay 10000000
+      poll request
+    _ -> pure Nothing
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
