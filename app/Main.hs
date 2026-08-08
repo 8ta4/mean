@@ -1,6 +1,8 @@
 module Main where
 
 import Control.Concurrent (threadDelay)
+import Control.Foldl (mean)
+import Control.Foldl qualified as Foldl
 import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
@@ -9,7 +11,7 @@ import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
-import Data.Map.Lazy (insertWith, lookup, singleton, union)
+import Data.Map.Lazy (elems, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
 import Data.Text qualified as Text
@@ -41,7 +43,9 @@ main = do
     then do
       maybeRawScores <- decodeFileStrict rawPath
       case maybeRawScores of
-        Just (rawScores :: RawScores) -> pure ()
+        Just (rawScores :: RawScores) -> do
+          let meanBenchmarkScore = Foldl.fold mean $ elems rawScores >>= ((fst <$>) <$> elems)
+          pure ()
         _ -> pure ()
       pure ()
     else

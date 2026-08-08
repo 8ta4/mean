@@ -25,6 +25,7 @@ dependencies:
   - bytestring
   - directory
   - filepath
+  - foldl
   - lens-aeson
   - lens
   - modern-uri
