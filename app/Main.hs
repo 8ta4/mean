@@ -21,6 +21,13 @@ import Text.URI (mkURI)
 
 type RawScores = Map Text (Map Text (Double, Double))
 
+data Entry = Entry
+  { phrase :: !Text,
+    gloss :: !Text,
+    benchmarkScore :: !Double,
+    targetScore :: !Double
+  }
+
 main :: IO ()
 main = do
   home <- getHomeDirectory
@@ -112,8 +119,8 @@ main = do
 rawPath :: FilePath
 rawPath = "raw.json"
 
-insertScore :: RawScores -> (Text, Text, Double, Double) -> RawScores
-insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
+insertScore :: RawScores -> Entry -> RawScores
+insertScore xs Entry {phrase, gloss, benchmarkScore, targetScore} = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
@@ -133,7 +140,7 @@ poll request = do
       poll request
     _ -> pure Nothing
 
-parseResult :: LazyByteString -> Maybe (Text, Text, Double, Double)
+parseResult :: LazyByteString -> Maybe Entry
 parseResult line = do
   scores <-
     line
@@ -150,7 +157,13 @@ parseResult line = do
   keyPair <- line ^? key "key" . _String . to decodeStrictText . _Just
   targetScore <- lookup (keyPair !! 0) scores
   benchmarkScore <- lookup benchmarkPhrase scores
-  pure $ ((keyPair !! 0), (keyPair !! 1), benchmarkScore, targetScore)
+  pure
+    $ Entry
+      { phrase = keyPair !! 0,
+        gloss = keyPair !! 1,
+        benchmarkScore,
+        targetScore
+      }
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
