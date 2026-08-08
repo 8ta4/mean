@@ -34,7 +34,7 @@ main :: IO ()
 main = do
   home <- getHomeDirectory
   let statePath = home </> ".local/state/mean"
-  let batchIdPath = statePath </> "id"
+      batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
@@ -159,8 +159,7 @@ poll request = do
         $ (!! 1)
         <$> (splitOn "/")
         <$> (responseBody response)
-        ^? key
-          "response"
+        ^? key "response"
           . key "responsesFile"
           . _String
     Just "BATCH_STATE_RUNNING" -> liftIO $ do
