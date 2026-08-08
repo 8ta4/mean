@@ -34,106 +34,106 @@ main :: IO ()
 main = do
   home <- getHomeDirectory
   let statePath = home </> ".local/state/mean"
-  let batchIdPath = statePath </> "id"
+      batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  if rawExists
-    then do
-      maybeRawScores <- decodeFileStrict rawPath
-      case maybeRawScores of
-        Just (rawScores :: RawScores) -> do
-          let meanBenchmarkScore = Foldl.fold mean $ elems rawScores >>= ((fst <$>) <$> elems)
-          writeFileLBS "mean.json"
-            $ encode
-            $ insert
-              benchmarkPhrase
-              (singleton benchmarkGloss meanBenchmarkScore)
-            $ ( ( \(benchmarkScore, targetScore) ->
-                    if targetScore == 0
-                      then 0
-                      else
-                        if targetScore <= benchmarkScore
-                          then
-                            targetScore * meanBenchmarkScore / benchmarkScore
-                          else
-                            100 - (100 - targetScore) * (100 - meanBenchmarkScore) / (100 - benchmarkScore)
+  let ensureSubmitted = unless (rawExists || batchExists) $ do
+        content <- readFileLBS "raw-wiktextract-data.jsonl"
+        temporaryDirectory <- getTemporaryDirectory
+        let inputPath = temporaryDirectory </> "input.jsonl"
+        writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+        fileSize <- getFileSize inputPath
+        let initialHeaders =
+              apiKeyHeader
+                <> header "X-Goog-Upload-Protocol" "resumable"
+                <> header "X-Goog-Upload-Command" "start"
+                <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
+                <> header "X-Goog-Upload-Header-Content-Type" "application/json"
+        initialResponse <-
+          runReq defaultHttpConfig
+            $ req
+              POST
+              (host /: "upload" /: "v1beta" /: "files")
+              (ReqBodyJson $ object [])
+              ignoreResponse
+              initialHeaders
+        case responseHeader initialResponse "x-goog-upload-url" of
+          Just uploadUrlHeader -> do
+            uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
+            case useHttpsURI uploadUri of
+              Just (uploadUrl, uploadOptions) -> do
+                uploadResponse <-
+                  runReq defaultHttpConfig
+                    $ req
+                      POST
+                      uploadUrl
+                      (ReqBodyFile inputPath)
+                      jsonResponse
+                      ( apiKeyHeader
+                          <> header "X-Goog-Upload-Offset" "0"
+                          <> header "X-Goog-Upload-Command" "upload, finalize"
+                          <> uploadOptions
+                      )
+                case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
+                  Just filename -> do
+                    batchResponse <-
+                      runReq defaultHttpConfig
+                        $ req
+                          POST
+                          batchUrl
+                          (ReqBodyJson $ makeBatchPayload filename)
+                          jsonResponse
+                          apiKeyHeader
+                    case (responseBody batchResponse :: Value) ^? key "name" . _String of
+                      Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                      _ -> pure ()
+                  _ -> pure ()
+              _ -> pure ()
+          _ -> pure ()
+      ensureDownloaded = unless rawExists $ do
+        batchId <- readFileBS batchIdPath
+        maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
+        case maybeResponsesFile of
+          Just responsesFile -> do
+            downloadResponse <-
+              runReq defaultHttpConfig
+                $ req
+                  GET
+                  (host /: "download" /: "v1beta" /: "files" /: (responsesFile <> ":download"))
+                  NoReqBody
+                  lbsResponse
+                  (apiKeyHeader <> "alt" =: ("media" :: Text))
+            writeFileLBS rawPath $ encode $ foldl' insertScore Map.empty $ mapMaybe parseResult $ Char8.lines $ responseBody downloadResponse
+          _ -> pure ()
+      ensureNormalized = do
+        maybeRawScores <- decodeFileStrict rawPath
+        case maybeRawScores of
+          Just (rawScores :: RawScores) -> do
+            let meanBenchmarkScore = Foldl.fold mean $ elems rawScores >>= ((fst <$>) <$> elems)
+            writeFileLBS "mean.json"
+              $ encode
+              $ insert
+                benchmarkPhrase
+                (singleton benchmarkGloss meanBenchmarkScore)
+              $ ( ( \(benchmarkScore, targetScore) ->
+                      if targetScore == 0
+                        then 0
+                        else
+                          if targetScore <= benchmarkScore
+                            then
+                              targetScore * meanBenchmarkScore / benchmarkScore
+                            else
+                              100 - (100 - targetScore) * (100 - meanBenchmarkScore) / (100 - benchmarkScore)
+                  )
+                    <$>
                 )
-                  <$>
-              )
-            <$> rawScores
-        _ -> pure ()
-    else
-      if batchExists
-        then do
-          batchId <- readFileBS batchIdPath
-          maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
-          case maybeResponsesFile of
-            Just responsesFile -> do
-              downloadResponse <-
-                runReq defaultHttpConfig
-                  $ req
-                    GET
-                    (host /: "download" /: "v1beta" /: "files" /: (responsesFile <> ":download"))
-                    NoReqBody
-                    lbsResponse
-                    (apiKeyHeader <> "alt" =: ("media" :: Text))
-              writeFileLBS rawPath $ encode $ foldl' insertScore Map.empty $ mapMaybe parseResult $ Char8.lines $ responseBody downloadResponse
-            _ -> pure ()
-        else do
-          content <- readFileLBS "raw-wiktextract-data.jsonl"
-          temporaryDirectory <- getTemporaryDirectory
-          let inputPath = temporaryDirectory </> "input.jsonl"
-          writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
-          fileSize <- getFileSize inputPath
-          let initialHeaders =
-                apiKeyHeader
-                  <> header "X-Goog-Upload-Protocol" "resumable"
-                  <> header "X-Goog-Upload-Command" "start"
-                  <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
-                  <> header "X-Goog-Upload-Header-Content-Type" "application/json"
-          initialResponse <-
-            runReq defaultHttpConfig
-              $ req
-                POST
-                (host /: "upload" /: "v1beta" /: "files")
-                (ReqBodyJson $ object [])
-                ignoreResponse
-                initialHeaders
-          case responseHeader initialResponse "x-goog-upload-url" of
-            Just uploadUrlHeader -> do
-              uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
-              case useHttpsURI uploadUri of
-                Just (uploadUrl, uploadOptions) -> do
-                  uploadResponse <-
-                    runReq defaultHttpConfig
-                      $ req
-                        POST
-                        uploadUrl
-                        (ReqBodyFile inputPath)
-                        jsonResponse
-                        ( apiKeyHeader
-                            <> header "X-Goog-Upload-Offset" "0"
-                            <> header "X-Goog-Upload-Command" "upload, finalize"
-                            <> uploadOptions
-                        )
-                  case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
-                    Just filename -> do
-                      batchResponse <-
-                        runReq defaultHttpConfig
-                          $ req
-                            POST
-                            batchUrl
-                            (ReqBodyJson $ makeBatchPayload filename)
-                            jsonResponse
-                            apiKeyHeader
-                      case (responseBody batchResponse :: Value) ^? key "name" . _String of
-                        Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
-                        _ -> pure ()
-                    _ -> pure ()
-                _ -> pure ()
-            _ -> pure ()
+              <$> rawScores
+          _ -> pure ()
+  ensureSubmitted
+  ensureDownloaded
+  ensureNormalized
 
 rawPath :: FilePath
 rawPath = "raw.json"
@@ -159,8 +159,7 @@ poll request = do
         $ (!! 1)
         <$> (splitOn "/")
         <$> (responseBody response)
-        ^? key
-          "response"
+        ^? key "response"
           . key "responsesFile"
           . _String
     Just "BATCH_STATE_RUNNING" -> liftIO $ do
