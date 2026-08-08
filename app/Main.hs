@@ -3,7 +3,7 @@ module Main where
 import Control.Concurrent (threadDelay)
 import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
-import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeStrictText, encode, object)
+import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy (LazyByteString)
@@ -19,6 +19,8 @@ import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, g
 import System.FilePath ((</>))
 import Text.URI (mkURI)
 
+type RawScores = Map Text (Map Text (Double, Double))
+
 main :: IO ()
 main = do
   home <- getHomeDirectory
@@ -29,7 +31,12 @@ main = do
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
   if rawExists
-    then pure ()
+    then do
+      maybeRawScores <- decodeFileStrict rawPath
+      case maybeRawScores of
+        Just (rawScores :: RawScores) -> pure ()
+        _ -> pure ()
+      pure ()
     else
       if batchExists
         then do
@@ -105,7 +112,7 @@ main = do
 rawPath :: FilePath
 rawPath = "raw.json"
 
-insertScore :: Map Text (Map Text (Double, Double)) -> (Text, Text, Double, Double) -> Map Text (Map Text (Double, Double))
+insertScore :: RawScores -> (Text, Text, Double, Double) -> RawScores
 insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
