@@ -26,77 +26,84 @@ main = do
   let batchIdPath = statePath </> "id"
   createDirectoryIfMissing True statePath
   batchExists <- doesFileExist batchIdPath
+  rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  if batchExists
-    then do
-      batchId <- readFileBS batchIdPath
-      maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
-      case maybeResponsesFile of
-        Just responsesFile -> do
-          downloadResponse <-
-            runReq defaultHttpConfig
-              $ req
-                GET
-                (host /: "download" /: "v1beta" /: "files" /: (responsesFile <> ":download"))
-                NoReqBody
-                lbsResponse
-                (apiKeyHeader <> "alt" =: ("media" :: Text))
-          writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe parseResult $ Char8.lines $ responseBody downloadResponse
-        _ -> pure ()
-    else do
-      content <- readFileLBS "raw-wiktextract-data.jsonl"
-      temporaryDirectory <- getTemporaryDirectory
-      let inputPath = temporaryDirectory </> "input.jsonl"
-      writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
-      fileSize <- getFileSize inputPath
-      let initialHeaders =
-            apiKeyHeader
-              <> header "X-Goog-Upload-Protocol" "resumable"
-              <> header "X-Goog-Upload-Command" "start"
-              <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
-              <> header "X-Goog-Upload-Header-Content-Type" "application/json"
-      initialResponse <-
-        runReq defaultHttpConfig
-          $ req
-            POST
-            (host /: "upload" /: "v1beta" /: "files")
-            (ReqBodyJson $ object [])
-            ignoreResponse
-            initialHeaders
-      case responseHeader initialResponse "x-goog-upload-url" of
-        Just uploadUrlHeader -> do
-          uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
-          case useHttpsURI uploadUri of
-            Just (uploadUrl, uploadOptions) -> do
-              uploadResponse <-
+  if rawExists
+    then pure ()
+    else
+      if batchExists
+        then do
+          batchId <- readFileBS batchIdPath
+          maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
+          case maybeResponsesFile of
+            Just responsesFile -> do
+              downloadResponse <-
                 runReq defaultHttpConfig
                   $ req
-                    POST
-                    uploadUrl
-                    (ReqBodyFile inputPath)
-                    jsonResponse
-                    ( apiKeyHeader
-                        <> header "X-Goog-Upload-Offset" "0"
-                        <> header "X-Goog-Upload-Command" "upload, finalize"
-                        <> uploadOptions
-                    )
-              case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
-                Just filename -> do
-                  batchResponse <-
+                    GET
+                    (host /: "download" /: "v1beta" /: "files" /: (responsesFile <> ":download"))
+                    NoReqBody
+                    lbsResponse
+                    (apiKeyHeader <> "alt" =: ("media" :: Text))
+              writeFileLBS rawPath $ encode $ foldl' insertScore Map.empty $ mapMaybe parseResult $ Char8.lines $ responseBody downloadResponse
+            _ -> pure ()
+        else do
+          content <- readFileLBS "raw-wiktextract-data.jsonl"
+          temporaryDirectory <- getTemporaryDirectory
+          let inputPath = temporaryDirectory </> "input.jsonl"
+          writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+          fileSize <- getFileSize inputPath
+          let initialHeaders =
+                apiKeyHeader
+                  <> header "X-Goog-Upload-Protocol" "resumable"
+                  <> header "X-Goog-Upload-Command" "start"
+                  <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
+                  <> header "X-Goog-Upload-Header-Content-Type" "application/json"
+          initialResponse <-
+            runReq defaultHttpConfig
+              $ req
+                POST
+                (host /: "upload" /: "v1beta" /: "files")
+                (ReqBodyJson $ object [])
+                ignoreResponse
+                initialHeaders
+          case responseHeader initialResponse "x-goog-upload-url" of
+            Just uploadUrlHeader -> do
+              uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
+              case useHttpsURI uploadUri of
+                Just (uploadUrl, uploadOptions) -> do
+                  uploadResponse <-
                     runReq defaultHttpConfig
                       $ req
                         POST
-                        batchUrl
-                        (ReqBodyJson $ makeBatchPayload filename)
+                        uploadUrl
+                        (ReqBodyFile inputPath)
                         jsonResponse
-                        apiKeyHeader
-                  case (responseBody batchResponse :: Value) ^? key "name" . _String of
-                    Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                        ( apiKeyHeader
+                            <> header "X-Goog-Upload-Offset" "0"
+                            <> header "X-Goog-Upload-Command" "upload, finalize"
+                            <> uploadOptions
+                        )
+                  case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
+                    Just filename -> do
+                      batchResponse <-
+                        runReq defaultHttpConfig
+                          $ req
+                            POST
+                            batchUrl
+                            (ReqBodyJson $ makeBatchPayload filename)
+                            jsonResponse
+                            apiKeyHeader
+                      case (responseBody batchResponse :: Value) ^? key "name" . _String of
+                        Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                        _ -> pure ()
                     _ -> pure ()
+                  pure ()
                 _ -> pure ()
-              pure ()
             _ -> pure ()
-        _ -> pure ()
+
+rawPath :: FilePath
+rawPath = "raw.json"
 
 insertScore :: Map Text (Map Text (Double, Double)) -> (Text, Text, Double, Double) -> Map Text (Map Text (Double, Double))
 insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
