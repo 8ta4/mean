@@ -63,7 +63,6 @@ main = do
                   <$>
               )
             <$> rawScores
-          pure ()
         _ -> pure ()
       pure ()
     else
