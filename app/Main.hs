@@ -64,7 +64,6 @@ main = do
               )
             <$> rawScores
         _ -> pure ()
-      pure ()
     else
       if batchExists
         then do
@@ -133,7 +132,6 @@ main = do
                         Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
                         _ -> pure ()
                     _ -> pure ()
-                  pure ()
                 _ -> pure ()
             _ -> pure ()
 
