@@ -42,7 +42,6 @@ main = do
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
           writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
         _ -> pure ()
-      pure ()
     else do
       content <- readFileLBS "raw-wiktextract-data.jsonl"
       temporaryDirectory <- getTemporaryDirectory
@@ -93,13 +92,10 @@ main = do
                   case (responseBody batchResponse :: Value) ^? key "name" . _String of
                     Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
                     _ -> pure ()
-                  pure ()
                 _ -> pure ()
               pure ()
             _ -> pure ()
-          pure ()
         _ -> pure ()
-      pure ()
 
 insertScore :: Map Text (Map Text (Double, Double)) -> (Text, Text, Double, Double) -> Map Text (Map Text (Double, Double))
 insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
