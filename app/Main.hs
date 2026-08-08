@@ -6,6 +6,7 @@ import Control.Lens.Prism (_Just)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, nth, values, _String)
+import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
 import Data.Map.Lazy (insertWith, lookup, singleton, union)
@@ -40,7 +41,7 @@ main = do
                 NoReqBody
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
-          writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
+          writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe parseResult $ Char8.lines $ responseBody downloadResponse
         _ -> pure ()
     else do
       content <- readFileLBS "raw-wiktextract-data.jsonl"
@@ -118,7 +119,7 @@ poll request = do
       poll request
     _ -> pure Nothing
 
-parseResult :: Value -> Maybe (Text, Text, Double, Double)
+parseResult :: LazyByteString -> Maybe (Text, Text, Double, Double)
 parseResult line = do
   scores <-
     line
