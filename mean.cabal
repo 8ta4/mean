@@ -69,6 +69,7 @@ executable mean
     , bytestring
     , directory
     , filepath
+    , foldl
     , lens
     , lens-aeson
     , modern-uri
@@ -125,6 +126,7 @@ test-suite spec
     , bytestring
     , directory
     , filepath
+    , foldl
     , lens
     , lens-aeson
     , modern-uri

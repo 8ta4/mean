@@ -1,6 +1,8 @@
 module Main where
 
 import Control.Concurrent (threadDelay)
+import Control.Foldl (mean)
+import Control.Foldl qualified as Foldl
 import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
@@ -9,7 +11,7 @@ import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
-import Data.Map.Lazy (insertWith, lookup, singleton, union)
+import Data.Map.Lazy (elems, insert, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
 import Data.Text qualified as Text
@@ -41,9 +43,27 @@ main = do
     then do
       maybeRawScores <- decodeFileStrict rawPath
       case maybeRawScores of
-        Just (rawScores :: RawScores) -> pure ()
+        Just (rawScores :: RawScores) -> do
+          let meanBenchmarkScore = Foldl.fold mean $ elems rawScores >>= ((fst <$>) <$> elems)
+          writeFileLBS "mean.json"
+            $ encode
+            $ insert
+              benchmarkPhrase
+              (singleton benchmarkGloss meanBenchmarkScore)
+            $ ( ( \(benchmarkScore, targetScore) ->
+                    if targetScore == 0
+                      then 0
+                      else
+                        if targetScore <= benchmarkScore
+                          then
+                            targetScore * meanBenchmarkScore / benchmarkScore
+                          else
+                            100 - (100 - targetScore) * (100 - meanBenchmarkScore) / (100 - benchmarkScore)
+                )
+                  <$>
+              )
+            <$> rawScores
         _ -> pure ()
-      pure ()
     else
       if batchExists
         then do
@@ -112,15 +132,23 @@ main = do
                         Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
                         _ -> pure ()
                     _ -> pure ()
-                  pure ()
                 _ -> pure ()
             _ -> pure ()
 
 rawPath :: FilePath
 rawPath = "raw.json"
 
-insertScore :: RawScores -> Entry -> RawScores
-insertScore xs Entry {phrase, gloss, benchmarkScore, targetScore} = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
+loadApiKeyHeader :: IO (Option 'Https)
+loadApiKeyHeader = do
+  home <- getHomeDirectory
+  apiKey <- readFileBS $ home </> ".config/mean/key"
+  pure $ header "x-goog-api-key" apiKey
+
+benchmarkPhrase :: Text
+benchmarkPhrase = "touchstone"
+
+benchmarkGloss :: Text
+benchmarkGloss = "(figurative, by extension) A standard of comparison or evaluation."
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
@@ -139,6 +167,12 @@ poll request = do
       threadDelay 10000000
       poll request
     _ -> pure Nothing
+
+host :: Url 'Https
+host = https "generativelanguage.googleapis.com"
+
+insertScore :: RawScores -> Entry -> RawScores
+insertScore xs Entry {phrase, gloss, benchmarkScore, targetScore} = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
 
 parseResult :: LazyByteString -> Maybe Entry
 parseResult line = do
@@ -164,20 +198,6 @@ parseResult line = do
         benchmarkScore,
         targetScore
       }
-
-makeBatchPayload :: Text -> Value
-makeBatchPayload filename =
-  object
-    [ "batch"
-        .= object
-          [ "input_config"
-              .= object
-                ["file_name" .= filename]
-          ]
-    ]
-
-batchUrl :: Url 'Https
-batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
 
 isTarget :: Value -> Bool
 isTarget entry = isEnglish entry && isNotBenchmark entry
@@ -256,6 +276,9 @@ makeRequestPayload phrase gloss =
           ]
     ]
 
+renderEdn :: Text -> Text -> Text
+renderEdn phrase gloss = "{:phrase " <> show phrase <> " :sense " <> show gloss <> "}"
+
 percentageSchema :: Value
 percentageSchema =
   object
@@ -264,32 +287,28 @@ percentageSchema =
       "type" .= ("number" :: Text)
     ]
 
-renderEdn :: Text -> Text -> Text
-renderEdn phrase gloss = "{:phrase " <> show phrase <> " :sense " <> show gloss <> "}"
+batchUrl :: Url 'Https
+batchUrl = baseUrl /: "models" /: model <> ":batchGenerateContent"
 
-benchmarkPhrase :: Text
-benchmarkPhrase = "touchstone"
+baseUrl :: Url 'Https
+baseUrl = host /: "v1beta"
 
-benchmarkGloss :: Text
-benchmarkGloss = "(figurative, by extension) A standard of comparison or evaluation."
+model :: Text
+model = "gemini-3.5-flash"
+
+makeBatchPayload :: Text -> Value
+makeBatchPayload filename =
+  object
+    [ "batch"
+        .= object
+          [ "input_config"
+              .= object
+                ["file_name" .= filename]
+          ]
+    ]
 
 systemPrompt :: Text
 systemPrompt = "Estimate the percentage of Americans 10 years or older who know each meaning."
 
 joinGlosses :: Value -> Text
 joinGlosses = Text.intercalate "\n" <$> (^.. values . _String)
-
-loadApiKeyHeader :: IO (Option 'Https)
-loadApiKeyHeader = do
-  home <- getHomeDirectory
-  apiKey <- readFileBS $ home </> ".config/mean/key"
-  pure $ header "x-goog-api-key" apiKey
-
-baseUrl :: Url 'Https
-baseUrl = host /: "v1beta"
-
-host :: Url 'Https
-host = https "generativelanguage.googleapis.com"
-
-model :: Text
-model = "gemini-3.5-flash"
