@@ -11,7 +11,7 @@ import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
-import Data.Map.Lazy (elems, insertWith, lookup, singleton, union)
+import Data.Map.Lazy (elems, insert, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
 import Data.Text qualified as Text
@@ -45,6 +45,24 @@ main = do
       case maybeRawScores of
         Just (rawScores :: RawScores) -> do
           let meanBenchmarkScore = Foldl.fold mean $ elems rawScores >>= ((fst <$>) <$> elems)
+          writeFileLBS "mean.json"
+            $ encode
+            $ insert
+              benchmarkPhrase
+              (singleton benchmarkGloss meanBenchmarkScore)
+            $ ( ( \(benchmarkScore, targetScore) ->
+                    if targetScore == 0
+                      then 0
+                      else
+                        if targetScore <= benchmarkScore
+                          then
+                            targetScore * meanBenchmarkScore / benchmarkScore
+                          else
+                            100 - (100 - targetScore) * (100 - meanBenchmarkScore) / (100 - benchmarkScore)
+                )
+                  <$>
+              )
+            <$> rawScores
           pure ()
         _ -> pure ()
       pure ()
