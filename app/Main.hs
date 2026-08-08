@@ -1,12 +1,15 @@
 module Main where
 
 import Control.Concurrent (threadDelay)
-import Control.Lens ((^..), (^?))
-import Data.Aeson (KeyValue ((.=)), Value, decode, encode, object)
+import Control.Lens (to, (^..), (^?))
+import Control.Lens.Prism (_Just)
+import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
-import Data.Aeson.Lens (key, values, _String)
+import Data.Aeson.Lens (key, nth, values, _String)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
+import Data.Map.Lazy (insertWith, lookup, singleton, union)
+import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
 import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
@@ -37,67 +40,69 @@ main = do
                 NoReqBody
                 lbsResponse
                 (apiKeyHeader <> "alt" =: ("media" :: Text))
-          pure ()
+          writeFileLBS "raw.json" $ encode $ foldl' insertScore Map.empty $ mapMaybe (decode >=> parseResult) $ Char8.lines $ responseBody downloadResponse
         _ -> pure ()
       pure ()
-    else
-      pure ()
-  content <- readFileLBS "raw-wiktextract-data.jsonl"
-  temporaryDirectory <- getTemporaryDirectory
-  let inputPath = temporaryDirectory </> "input.jsonl"
-  writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
-  fileSize <- getFileSize inputPath
-  let initialHeaders =
-        apiKeyHeader
-          <> header "X-Goog-Upload-Protocol" "resumable"
-          <> header "X-Goog-Upload-Command" "start"
-          <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
-          <> header "X-Goog-Upload-Header-Content-Type" "application/json"
-  initialResponse <-
-    runReq defaultHttpConfig
-      $ req
-        POST
-        (host /: "upload" /: "v1beta" /: "files")
-        (ReqBodyJson $ object [])
-        ignoreResponse
-        initialHeaders
-  case responseHeader initialResponse "x-goog-upload-url" of
-    Just uploadUrlHeader -> do
-      uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
-      case useHttpsURI uploadUri of
-        Just (uploadUrl, uploadOptions) -> do
-          uploadResponse <-
-            runReq defaultHttpConfig
-              $ req
-                POST
-                uploadUrl
-                (ReqBodyFile inputPath)
-                jsonResponse
-                ( apiKeyHeader
-                    <> header "X-Goog-Upload-Offset" "0"
-                    <> header "X-Goog-Upload-Command" "upload, finalize"
-                    <> uploadOptions
-                )
-          case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
-            Just filename -> do
-              batchResponse <-
+    else do
+      content <- readFileLBS "raw-wiktextract-data.jsonl"
+      temporaryDirectory <- getTemporaryDirectory
+      let inputPath = temporaryDirectory </> "input.jsonl"
+      writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+      fileSize <- getFileSize inputPath
+      let initialHeaders =
+            apiKeyHeader
+              <> header "X-Goog-Upload-Protocol" "resumable"
+              <> header "X-Goog-Upload-Command" "start"
+              <> header "X-Goog-Upload-Header-Content-Length" (show fileSize)
+              <> header "X-Goog-Upload-Header-Content-Type" "application/json"
+      initialResponse <-
+        runReq defaultHttpConfig
+          $ req
+            POST
+            (host /: "upload" /: "v1beta" /: "files")
+            (ReqBodyJson $ object [])
+            ignoreResponse
+            initialHeaders
+      case responseHeader initialResponse "x-goog-upload-url" of
+        Just uploadUrlHeader -> do
+          uploadUri <- mkURI $ decodeUtf8 uploadUrlHeader
+          case useHttpsURI uploadUri of
+            Just (uploadUrl, uploadOptions) -> do
+              uploadResponse <-
                 runReq defaultHttpConfig
                   $ req
                     POST
-                    batchUrl
-                    (ReqBodyJson $ makeBatchPayload filename)
+                    uploadUrl
+                    (ReqBodyFile inputPath)
                     jsonResponse
-                    apiKeyHeader
-              case (responseBody batchResponse :: Value) ^? key "name" . _String of
-                Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                    ( apiKeyHeader
+                        <> header "X-Goog-Upload-Offset" "0"
+                        <> header "X-Goog-Upload-Command" "upload, finalize"
+                        <> uploadOptions
+                    )
+              case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
+                Just filename -> do
+                  batchResponse <-
+                    runReq defaultHttpConfig
+                      $ req
+                        POST
+                        batchUrl
+                        (ReqBodyJson $ makeBatchPayload filename)
+                        jsonResponse
+                        apiKeyHeader
+                  case (responseBody batchResponse :: Value) ^? key "name" . _String of
+                    Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
+                    _ -> pure ()
+                  pure ()
                 _ -> pure ()
               pure ()
             _ -> pure ()
           pure ()
         _ -> pure ()
       pure ()
-    _ -> pure ()
-  pure ()
+
+insertScore :: Map Text (Map Text (Double, Double)) -> (Text, Text, Double, Double) -> Map Text (Map Text (Double, Double))
+insertScore xs (phrase, gloss, benchmarkScore, targetScore) = insertWith union phrase (singleton gloss (benchmarkScore, targetScore)) xs
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
@@ -116,6 +121,25 @@ poll request = do
       threadDelay 10000000
       poll request
     _ -> pure Nothing
+
+parseResult :: Value -> Maybe (Text, Text, Double, Double)
+parseResult line = do
+  scores <-
+    line
+      ^? key "response"
+        . key "candidates"
+        . nth 0
+        . key "content"
+        . key "parts"
+        . nth 0
+        . key "text"
+        . _String
+        . to decodeStrictText
+        . _Just
+  keyPair <- line ^? key "key" . _String . to decodeStrictText . _Just
+  targetScore <- lookup (keyPair !! 0) scores
+  benchmarkScore <- lookup benchmarkPhrase scores
+  pure $ ((keyPair !! 0), (keyPair !! 1), benchmarkScore, targetScore)
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
@@ -144,13 +168,16 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
   Just phrase -> benchmarkPhrase /= phrase
   _ -> False
 
+renderJson :: (ToJSON a) => a -> Text
+renderJson = decodeUtf8 <$> encode
+
 processEntry :: Value -> [Char8.ByteString]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
     encode
       <$> ( \gloss ->
               object
-                [ "key" .= gloss,
+                [ "key" .= renderJson [phrase, gloss],
                   "request" .= makeRequestPayload phrase gloss
                 ]
           )
