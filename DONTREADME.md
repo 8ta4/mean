@@ -156,15 +156,37 @@ Yes.
 
 A sense alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical sense text.
 
+> Can a phrase contain multiple words?
+
+Yes.
+
+In English Wiktionary, a phrase matches the `word` entry, which also includes single words and multi-word expressions.
+
+> Does `mean` evaluate `glosses` or `raw_glosses`?
+
+`mean` evaluates `glosses`.
+
+Over 70% of senses don't have `raw_glosses`.
+
+In contrast, `glosses` cover over 99.9% of English senses.
+
+I thought about falling back from `raw_glosses` to `glosses`. I decided not to go that route for these reasons:
+
+- You may need to duplicate the fallback logic while matching scores back to the Wiktionary dump.
+
+- `glosses` usually have enough info for the model to estimate prevalence.
+
+- Shorter definitions help reduce token usage for each request.
+
 > Are nested glosses concatenated?
 
 Yes.
 
-Nested glosses get joined using a newline because of these reasons:
+Nested glosses get joined using a newline.
 
-- For prompts, a newline gives a clear grammatical break so the glosses don't blend together and mess up the grammar.
+For prompts, a newline gives a grammatical break so the glosses don't blend together and mess up the grammar.
 
-- For JSON keys, a newline creates a unique key since glosses don't contain newlines.
+An individual gloss can also have newlines. Two different glosses can still end up with the same combined text. Splitting a key by newlines might not bring back the original list structure. But you can still look up scores by using the same newline join on the dump data.
 
 > Is the part of speech sent to the LLM?
 
