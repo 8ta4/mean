@@ -56,17 +56,17 @@ Non-lemma forms are evaluated for these reasons:
 
 - Throwing in non-lemma forms doesn't blow up the dataset size by a factor of ten.
 
-> Does `mean` evaluate empty raw glosses?
+> Does `mean` evaluate empty glosses?
 
 No.
 
-`mean` drops senses with empty raw glosses for these reasons:
+`mean` drops senses with empty glosses for these reasons:
 
-- Under 0.1% of English senses don't have raw glosses.
+- Under 0.1% of English senses don't have glosses.
 
-- Evaluating a sense without raw glosses can inflate its score because the model might mix up a rare sense with the phrase's usual meaning.
+- Evaluating a sense without glosses can inflate its score because the model might mix up a rare sense with the phrase's usual meaning.
 
-- Including examples or other fields to infer missing raw glosses may increase token usage and add extra prompt noise across requests.
+- Including examples or other fields to infer missing glosses may increase token usage and add extra prompt noise across requests.
 
 > Does `mean` evaluate Wikipedia entries?
 
@@ -156,15 +156,15 @@ Yes.
 
 A sense alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical sense text.
 
-> Are nested raw glosses concatenated?
+> Are nested glosses concatenated?
 
 Yes.
 
-Nested raw glosses get joined using a newline because of these reasons:
+Nested glosses get joined using a newline because of these reasons:
 
 - For prompts, a newline gives a clear grammatical break so the glosses don't blend together and mess up the grammar.
 
-- For JSON keys, a newline creates a unique key since raw glosses don't contain newlines.
+- For JSON keys, a newline creates a unique key since glosses don't contain newlines.
 
 > Is the part of speech sent to the LLM?
 
@@ -212,19 +212,19 @@ The benchmark phrase gets scored first.
 
 Scoring the benchmark phrase first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark phrase's context stays more alike across requests compared to using the reverse order.
 
-> Are the concatenated raw glosses included in the model's structured output?
+> Are the concatenated glosses included in the model's structured output?
 
 No.
 
 The structured output is an object that maps the benchmark phrase and the target phrase to their scores.
 
-The concatenated raw glosses are omitted from the model's output. Here's why:
+The concatenated glosses are omitted from the model's output. Here's why:
 
 - It cuts down on output tokens.
 
 - It helps the model focus on scoring the phrases.
 
-The concatenated raw glosses are tracked outside the structured output, using the metadata key instead.
+The concatenated glosses are tracked outside the structured output, using the metadata key instead.
 
 > What's the normalization formula?
 
