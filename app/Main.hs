@@ -148,7 +148,7 @@ benchmarkPhrase :: Text
 benchmarkPhrase = "touchstone"
 
 benchmarkGloss :: Text
-benchmarkGloss = "(figurative, by extension) A standard of comparison or evaluation."
+benchmarkGloss = "A standard of comparison or evaluation."
 
 poll :: Req (JsonResponse Value) -> IO (Maybe Text)
 poll request = do
