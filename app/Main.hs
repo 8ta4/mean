@@ -226,7 +226,7 @@ processEntry entry = case entry ^? key "word" . _String of
           )
       <$> joinGlosses
       <$> entry
-      ^.. key "senses" . values . key "raw_glosses"
+      ^.. key "senses" . values . key "glosses"
   _ -> []
 
 makeRequestPayload :: Text -> Text -> Value
