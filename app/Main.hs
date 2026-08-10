@@ -275,8 +275,10 @@ makeRequestPayload phrase gloss =
           ]
     ]
 
+-- Haskell's `show` escapes non-ASCII Unicode characters using decimal escape sequences.
+-- `renderJson` uses JSON string escaping.
 renderEdn :: Text -> Text -> Text
-renderEdn phrase gloss = "{:phrase " <> show phrase <> " :sense " <> show gloss <> "}"
+renderEdn phrase gloss = "{:phrase " <> renderJson phrase <> " :sense " <> renderJson gloss <> "}"
 
 percentageSchema :: Value
 percentageSchema =
