@@ -6,9 +6,9 @@
 
 `mean` estimates how widely known meanings are.
 
-> Where is the dataset hosted?
+> What's the repo for the dataset?
 
-You can find the preprocessed data in the mean-data repo.
+The dataset is in the mean-data repo.
 
 ## Setup
 
