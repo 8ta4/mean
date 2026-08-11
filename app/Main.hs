@@ -18,7 +18,7 @@ import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
-import System.FilePath ((</>))
+import System.FilePath (takeFileName, (</>))
 import System.Process
 import Text.URI (mkURI)
 
@@ -41,11 +41,16 @@ main = do
   home <- getHomeDirectory
   let statePath = home </> ".local/state/mean"
       batchIdPath = statePath </> "id"
+      partsPath = statePath </> "parts"
   createDirectoryIfMissing True statePath
+  createDirectoryIfMissing True partsPath
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensureSubmitted = unless (rawExists || batchExists) $ do
+  let ensurePartsDownloaded = do
+        traverse_ downloadPart parts
+      downloadPart part = callProcess "wget" ["-c", "-O", partsPath </> takeFileName (toString $ url part), toString $ url part]
+      ensureSubmitted = unless (rawExists || batchExists) $ do
         content <- readFileLBS "raw-wiktextract-data.jsonl"
         temporaryDirectory <- getTemporaryDirectory
         let inputPath = temporaryDirectory </> "input.jsonl"
@@ -98,7 +103,7 @@ main = do
                   _ -> pure ()
               _ -> pure ()
           _ -> pure ()
-      ensureDownloaded = unless rawExists $ do
+      ensureRawDownloaded = unless rawExists $ do
         batchId <- readFileBS batchIdPath
         maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
         case maybeResponsesFile of
@@ -137,8 +142,9 @@ main = do
                 )
               <$> rawScores
           _ -> pure ()
+  ensurePartsDownloaded
   ensureSubmitted
-  ensureDownloaded
+  ensureRawDownloaded
   ensureNormalized
 
 parts :: [Part]
@@ -152,9 +158,6 @@ parts =
         hash = "b7a3a3686e63c48d30e3ef8c47dc5e199e28452894104cd37ecc6070c1f49d5c"
       }
   ]
-
-download :: Text -> IO ()
-download url = callProcess "wget" ["-c", toString url]
 
 rawPath :: FilePath
 rawPath = "raw.json"
