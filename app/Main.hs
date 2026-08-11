@@ -31,9 +31,6 @@ data Entry = Entry
     targetScore :: !Double
   }
 
-download :: Text -> IO ()
-download url = callProcess "wget" ["-c", toString url]
-
 main :: IO ()
 main = do
   home <- getHomeDirectory
@@ -138,6 +135,9 @@ main = do
   ensureSubmitted
   ensureDownloaded
   ensureNormalized
+
+download :: Text -> IO ()
+download url = callProcess "wget" ["-c", toString url]
 
 rawPath :: FilePath
 rawPath = "raw.json"
