@@ -31,6 +31,11 @@ data Entry = Entry
     targetScore :: !Double
   }
 
+data Part = Part
+  { url :: !Text,
+    hash :: !Text
+  }
+
 main :: IO ()
 main = do
   home <- getHomeDirectory
@@ -135,6 +140,18 @@ main = do
   ensureSubmitted
   ensureDownloaded
   ensureNormalized
+
+parts :: [Part]
+parts =
+  [ Part
+      { url = "https://github.com/8ta4/mean-data/releases/download/v0.1.0/raw-wiktextract-data.jsonl.gz.aa",
+        hash = "04fd9f655e9aff043b92318f7148b1e703cb29abe496886d10affe93699acd35"
+      },
+    Part
+      { url = "https://github.com/8ta4/mean-data/releases/download/v0.1.0/raw-wiktextract-data.jsonl.gz.ab",
+        hash = "b7a3a3686e63c48d30e3ef8c47dc5e199e28452894104cd37ecc6070c1f49d5c"
+      }
+  ]
 
 download :: Text -> IO ()
 download url = callProcess "wget" ["-c", toString url]
