@@ -1,5 +1,6 @@
 module Main where
 
+import Codec.Compression.GZip (decompress)
 import Control.Concurrent (threadDelay)
 import Control.Foldl (mean)
 import Control.Foldl qualified as Foldl
@@ -44,20 +45,24 @@ main = do
   let statePath = home </> ".local/state/mean"
       batchIdPath = statePath </> "id"
       partsPath = statePath </> "parts"
+      extractedPath = statePath </> "raw-wiktextract-data.jsonl"
   createDirectoryIfMissing True statePath
   createDirectoryIfMissing True partsPath
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
   let ensurePartsDownloaded = do
-        traverse_ downloadPart parts
+        partBytes <- traverse downloadPart parts
+        writeFileLBS extractedPath $ decompress $ fold partBytes
       downloadPart part = do
         let partPath = partsPath </> takeFileName (toString $ part.url)
         callProcess "wget" ["-c", "-O", partPath, toString $ part.url]
         content <- readFileLBS partPath
-        unless (part.hash == (decodeUtf8 $ Base16.encode $ hashlazy content)) $ error "Checksum verification failed"
+        if (part.hash == (decodeUtf8 $ Base16.encode $ hashlazy content))
+          then pure content
+          else error "Checksum verification failed"
       ensureSubmitted = unless (rawExists || batchExists) $ do
-        content <- readFileLBS "raw-wiktextract-data.jsonl"
+        content <- readFileLBS extractedPath
         temporaryDirectory <- getTemporaryDirectory
         let inputPath = temporaryDirectory </> "input.jsonl"
         writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry

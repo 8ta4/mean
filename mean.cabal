@@ -78,6 +78,7 @@ executable mean
     , process
     , relude
     , req
+    , zlib
   default-language: Haskell2010
 
 test-suite spec
@@ -138,4 +139,5 @@ test-suite spec
     , process
     , relude
     , req
+    , zlib
   default-language: Haskell2010

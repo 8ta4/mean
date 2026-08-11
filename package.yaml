@@ -34,6 +34,7 @@ dependencies:
   - process
   - relude
   - req
+  - zlib
 
 ghc-options:
   # https://github.com/commercialhaskell/stack-templates/blob/360442dbdc3d114df5fe377306978d4f47694370/new-template.hsfiles#L45-L47
