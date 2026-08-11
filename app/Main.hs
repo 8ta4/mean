@@ -9,6 +9,7 @@ import Crypto.Hash.SHA256 (hashlazy)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, nth, values, _String)
+import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
@@ -54,7 +55,7 @@ main = do
         let partPath = partsPath </> takeFileName (toString $ part.url)
         callProcess "wget" ["-c", "-O", partPath, toString $ part.url]
         content <- readFileLBS partPath
-        unless (part.hash == (decodeUtf8 $ hashlazy content)) $ error "Checksum verification failed"
+        unless (part.hash == (decodeUtf8 $ Base16.encode $ hashlazy content)) $ error "Checksum verification failed"
       ensureSubmitted = unless (rawExists || batchExists) $ do
         content <- readFileLBS "raw-wiktextract-data.jsonl"
         temporaryDirectory <- getTemporaryDirectory
