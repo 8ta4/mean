@@ -52,18 +52,7 @@ main = do
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensureManifest =
-        writeFileLBS "manifest.json"
-          $ encode
-          $ object
-            [ "benchmark"
-                .= object
-                  [ "phrase" .= benchmarkPhrase,
-                    "gloss" .= benchmarkGloss
-                  ],
-              "parts" .= parts
-            ]
-      ensureExtracted = do
+  let ensureExtracted = do
         partBytes <- traverse downloadPart parts
         writeFileLBS extractedPath $ decompress $ fold partBytes
       downloadPart part = do
@@ -363,3 +352,16 @@ systemPrompt = "Estimate the percentage of Americans 10 years or older who know 
 
 joinGlosses :: Value -> Text
 joinGlosses = Text.intercalate "\n" <$> (^.. values . _String)
+
+ensureManifest :: IO ()
+ensureManifest =
+  writeFileLBS "manifest.json"
+    $ encode
+    $ object
+      [ "benchmark"
+          .= object
+            [ "phrase" .= benchmarkPhrase,
+              "gloss" .= benchmarkGloss
+            ],
+        "parts" .= parts
+      ]
