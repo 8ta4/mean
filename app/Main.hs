@@ -1,13 +1,16 @@
 module Main where
 
+import Codec.Compression.GZip (decompress)
 import Control.Concurrent (threadDelay)
 import Control.Foldl (mean)
 import Control.Foldl qualified as Foldl
 import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
+import Crypto.Hash.SHA256 (hashlazy)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, nth, values, _String)
+import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.List ((!!))
@@ -18,7 +21,8 @@ import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
-import System.FilePath ((</>))
+import System.FilePath (takeFileName, (</>))
+import System.Process
 import Text.URI (mkURI)
 
 type RawScores = Map Text (Map Text (Double, Double))
@@ -30,17 +34,35 @@ data Entry = Entry
     targetScore :: !Double
   }
 
+data Part = Part
+  { url :: !Text,
+    hash :: !Text
+  }
+
 main :: IO ()
 main = do
   home <- getHomeDirectory
   let statePath = home </> ".local/state/mean"
       batchIdPath = statePath </> "id"
+      partsPath = statePath </> "parts"
+      extractedPath = statePath </> "raw-wiktextract-data.jsonl"
   createDirectoryIfMissing True statePath
+  createDirectoryIfMissing True partsPath
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensureSubmitted = unless (rawExists || batchExists) $ do
-        content <- readFileLBS "raw-wiktextract-data.jsonl"
+  let ensurePartsDownloaded = do
+        partBytes <- traverse downloadPart parts
+        writeFileLBS extractedPath $ decompress $ fold partBytes
+      downloadPart part = do
+        let partPath = partsPath </> takeFileName (toString $ part.url)
+        callProcess "wget" ["-c", "-O", partPath, toString $ part.url]
+        content <- readFileLBS partPath
+        if (part.hash == (decodeUtf8 $ Base16.encode $ hashlazy content))
+          then pure content
+          else error "Checksum verification failed"
+      ensureSubmitted = unless (rawExists || batchExists) $ do
+        content <- readFileLBS extractedPath
         temporaryDirectory <- getTemporaryDirectory
         let inputPath = temporaryDirectory </> "input.jsonl"
         writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
@@ -92,7 +114,7 @@ main = do
                   _ -> pure ()
               _ -> pure ()
           _ -> pure ()
-      ensureDownloaded = unless rawExists $ do
+      ensureRawDownloaded = unless rawExists $ do
         batchId <- readFileBS batchIdPath
         maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
         case maybeResponsesFile of
@@ -131,9 +153,22 @@ main = do
                 )
               <$> rawScores
           _ -> pure ()
+  ensurePartsDownloaded
   ensureSubmitted
-  ensureDownloaded
+  ensureRawDownloaded
   ensureNormalized
+
+parts :: [Part]
+parts =
+  [ Part
+      { url = "https://github.com/8ta4/mean-data/releases/download/v0.1.0/raw-wiktextract-data.jsonl.gz.aa",
+        hash = "04fd9f655e9aff043b92318f7148b1e703cb29abe496886d10affe93699acd35"
+      },
+    Part
+      { url = "https://github.com/8ta4/mean-data/releases/download/v0.1.0/raw-wiktextract-data.jsonl.gz.ab",
+        hash = "b7a3a3686e63c48d30e3ef8c47dc5e199e28452894104cd37ecc6070c1f49d5c"
+      }
+  ]
 
 rawPath :: FilePath
 rawPath = "raw.json"

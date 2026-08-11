@@ -66,15 +66,19 @@ executable mean
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base16-bytestring
     , bytestring
+    , cryptohash
     , directory
     , filepath
     , foldl
     , lens
     , lens-aeson
     , modern-uri
+    , process
     , relude
     , req
+    , zlib
   default-language: Haskell2010
 
 test-suite spec
@@ -123,13 +127,17 @@ test-suite spec
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base16-bytestring
     , bytestring
+    , cryptohash
     , directory
     , filepath
     , foldl
     , lens
     , lens-aeson
     , modern-uri
+    , process
     , relude
     , req
+    , zlib
   default-language: Haskell2010

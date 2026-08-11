@@ -22,15 +22,19 @@ description: Please see the README on GitHub at <https://github.com/githubuser/m
 dependencies:
   - base >= 4.7 && < 5
   - aeson
+  - base16-bytestring
   - bytestring
+  - cryptohash
   - directory
   - filepath
   - foldl
   - lens-aeson
   - lens
   - modern-uri
+  - process
   - relude
   - req
+  - zlib
 
 ghc-options:
   # https://github.com/commercialhaskell/stack-templates/blob/360442dbdc3d114df5fe377306978d4f47694370/new-template.hsfiles#L45-L47
