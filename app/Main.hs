@@ -49,7 +49,7 @@ main = do
   apiKeyHeader <- loadApiKeyHeader
   let ensurePartsDownloaded = do
         traverse_ downloadPart parts
-      downloadPart part = callProcess "wget" ["-c", "-O", partsPath </> takeFileName (toString $ url part), toString $ url part]
+      downloadPart part = callProcess "wget" ["-c", "-O", partsPath </> takeFileName (toString $ part.url), toString $ part.url]
       ensureSubmitted = unless (rawExists || batchExists) $ do
         content <- readFileLBS "raw-wiktextract-data.jsonl"
         temporaryDirectory <- getTemporaryDirectory
