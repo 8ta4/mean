@@ -51,7 +51,7 @@ main = do
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensurePartsDownloaded = do
+  let ensureExtracted = do
         partBytes <- traverse downloadPart parts
         writeFileLBS extractedPath $ decompress $ fold partBytes
       downloadPart part = do
@@ -114,7 +114,7 @@ main = do
                   _ -> pure ()
               _ -> pure ()
           _ -> pure ()
-      ensureRawDownloaded = unless rawExists $ do
+      ensureDownloaded = unless rawExists $ do
         batchId <- readFileBS batchIdPath
         maybeResponsesFile <- poll $ req GET (baseUrl /: "batches" /: decodeUtf8 batchId) NoReqBody jsonResponse apiKeyHeader
         case maybeResponsesFile of
@@ -153,9 +153,9 @@ main = do
                 )
               <$> rawScores
           _ -> pure ()
-  ensurePartsDownloaded
+  ensureExtracted
   ensureSubmitted
-  ensureRawDownloaded
+  ensureDownloaded
   ensureNormalized
 
 parts :: [Part]
