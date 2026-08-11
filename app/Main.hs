@@ -5,6 +5,7 @@ import Control.Foldl (mean)
 import Control.Foldl qualified as Foldl
 import Control.Lens (to, (^..), (^?))
 import Control.Lens.Prism (_Just)
+import Crypto.Hash.SHA256 (hashlazy)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Lens (key, nth, values, _String)
@@ -49,7 +50,11 @@ main = do
   apiKeyHeader <- loadApiKeyHeader
   let ensurePartsDownloaded = do
         traverse_ downloadPart parts
-      downloadPart part = callProcess "wget" ["-c", "-O", partsPath </> takeFileName (toString $ part.url), toString $ part.url]
+      downloadPart part = do
+        let partPath = partsPath </> takeFileName (toString $ part.url)
+        callProcess "wget" ["-c", "-O", partPath, toString $ part.url]
+        content <- readFileLBS partPath
+        unless (part.hash == (decodeUtf8 $ hashlazy content)) $ error "Checksum verification failed"
       ensureSubmitted = unless (rawExists || batchExists) $ do
         content <- readFileLBS "raw-wiktextract-data.jsonl"
         temporaryDirectory <- getTemporaryDirectory

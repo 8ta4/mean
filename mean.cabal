@@ -67,6 +67,7 @@ executable mean
       aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash
     , directory
     , filepath
     , foldl
@@ -125,6 +126,7 @@ test-suite spec
       aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash
     , directory
     , filepath
     , foldl
