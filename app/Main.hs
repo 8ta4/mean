@@ -38,6 +38,7 @@ data Part = Part
   { url :: !Text,
     hash :: !Text
   }
+  deriving (Generic, ToJSON)
 
 main :: IO ()
 main = do
@@ -51,7 +52,18 @@ main = do
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensureExtracted = do
+  let ensureManifest =
+        writeFileLBS "manifest.json"
+          $ encode
+          $ object
+            [ "benchmark"
+                .= object
+                  [ "phrase" .= benchmarkPhrase,
+                    "gloss" .= benchmarkGloss
+                  ],
+              "parts" .= parts
+            ]
+      ensureExtracted = do
         partBytes <- traverse downloadPart parts
         writeFileLBS extractedPath $ decompress $ fold partBytes
       downloadPart part = do
@@ -153,6 +165,7 @@ main = do
                 )
               <$> rawScores
           _ -> pure ()
+  ensureManifest
   ensureExtracted
   ensureSubmitted
   ensureDownloaded

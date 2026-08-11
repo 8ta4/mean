@@ -36,10 +36,11 @@ executable mean
       ConstraintKinds
       DataKinds
       DefaultSignatures
-      DeriveFunctor
+      DeriveAnyClass
       DeriveFoldable
-      DeriveTraversable
+      DeriveFunctor
       DeriveGeneric
+      DeriveTraversable
       DerivingStrategies
       DerivingVia
       EmptyDataDecls
@@ -52,12 +53,12 @@ executable mean
       MultiParamTypeClasses
       NamedFieldPuns
       NoImplicitPrelude
+      OverloadedRecordDot
+      OverloadedStrings
       PatternGuards
       PatternSynonyms
       RankNTypes
       RecordWildCards
-      OverloadedRecordDot
-      OverloadedStrings
       ScopedTypeVariables
       TupleSections
       TypeFamilies
@@ -97,10 +98,11 @@ test-suite spec
       ConstraintKinds
       DataKinds
       DefaultSignatures
-      DeriveFunctor
+      DeriveAnyClass
       DeriveFoldable
-      DeriveTraversable
+      DeriveFunctor
       DeriveGeneric
+      DeriveTraversable
       DerivingStrategies
       DerivingVia
       EmptyDataDecls
@@ -113,12 +115,12 @@ test-suite spec
       MultiParamTypeClasses
       NamedFieldPuns
       NoImplicitPrelude
+      OverloadedRecordDot
+      OverloadedStrings
       PatternGuards
       PatternSynonyms
       RankNTypes
       RecordWildCards
-      OverloadedRecordDot
-      OverloadedStrings
       ScopedTypeVariables
       TupleSections
       TypeFamilies

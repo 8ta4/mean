@@ -82,10 +82,11 @@ default-extensions:
   - ConstraintKinds
   - DataKinds
   - DefaultSignatures
-  - DeriveFunctor
+  - DeriveAnyClass
   - DeriveFoldable
-  - DeriveTraversable
+  - DeriveFunctor
   - DeriveGeneric
+  - DeriveTraversable
   - DerivingStrategies
   - DerivingVia
   - EmptyDataDecls
@@ -98,12 +99,12 @@ default-extensions:
   - MultiParamTypeClasses
   - NamedFieldPuns
   - NoImplicitPrelude
+  - OverloadedRecordDot
+  - OverloadedStrings
   - PatternGuards
   - PatternSynonyms
   - RankNTypes
   - RecordWildCards
-  - OverloadedRecordDot
-  - OverloadedStrings
   - ScopedTypeVariables
   - TupleSections
   - TypeFamilies
