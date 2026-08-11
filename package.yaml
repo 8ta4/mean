@@ -29,6 +29,7 @@ dependencies:
   - lens-aeson
   - lens
   - modern-uri
+  - process
   - relude
   - req
 

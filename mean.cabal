@@ -73,6 +73,7 @@ executable mean
     , lens
     , lens-aeson
     , modern-uri
+    , process
     , relude
     , req
   default-language: Haskell2010
@@ -130,6 +131,7 @@ test-suite spec
     , lens
     , lens-aeson
     , modern-uri
+    , process
     , relude
     , req
   default-language: Haskell2010

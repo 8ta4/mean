@@ -19,6 +19,7 @@ import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option,
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath ((</>))
+import System.Process
 import Text.URI (mkURI)
 
 type RawScores = Map Text (Map Text (Double, Double))
@@ -29,6 +30,9 @@ data Entry = Entry
     benchmarkScore :: !Double,
     targetScore :: !Double
   }
+
+download :: Text -> IO ()
+download url = callProcess "wget" ["-c", toString url]
 
 main :: IO ()
 main = do
