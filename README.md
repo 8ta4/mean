@@ -8,7 +8,7 @@
 
 > What's the repo for the dataset?
 
-The dataset is in the mean-data repo.
+The dataset is in the [mean-data](https://github.com/8ta4/mean-data) repo.
 
 ## Setup
 
