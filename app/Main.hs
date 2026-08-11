@@ -52,18 +52,7 @@ main = do
   batchExists <- doesFileExist batchIdPath
   rawExists <- doesFileExist rawPath
   apiKeyHeader <- loadApiKeyHeader
-  let ensureManifest =
-        writeFileLBS "manifest.json"
-          $ encode
-          $ object
-            [ "benchmark"
-                .= object
-                  [ "phrase" .= benchmarkPhrase,
-                    "gloss" .= benchmarkGloss
-                  ],
-              "parts" .= parts
-            ]
-      ensureExtracted = do
+  let ensureExtracted = do
         partBytes <- traverse downloadPart parts
         writeFileLBS extractedPath $ decompress $ fold partBytes
       downloadPart part = do
@@ -77,7 +66,7 @@ main = do
         content <- readFileLBS extractedPath
         temporaryDirectory <- getTemporaryDirectory
         let inputPath = temporaryDirectory </> "input.jsonl"
-        writeFileLBS inputPath $ Char8.unlines $ (filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry
+        writeFileLBS inputPath $ Char8.unlines $ makeBatchLine <$> ordNub ((filter isTarget $ mapMaybe decode $ Char8.lines content) >>= processEntry)
         fileSize <- getFileSize inputPath
         let initialHeaders =
               apiKeyHeader
@@ -262,16 +251,18 @@ isNotBenchmark entry = case entry ^? key "word" . _String of
 renderJson :: (ToJSON a) => a -> Text
 renderJson = decodeUtf8 <$> encode
 
-processEntry :: Value -> [Char8.ByteString]
+makeBatchLine :: (Text, Text) -> Char8.ByteString
+makeBatchLine (phrase, gloss) =
+  encode
+    $ object
+      [ "key" .= renderJson [phrase, gloss],
+        "request" .= makeRequestPayload phrase gloss
+      ]
+
+processEntry :: Value -> [(Text, Text)]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
-    encode
-      <$> ( \gloss ->
-              object
-                [ "key" .= renderJson [phrase, gloss],
-                  "request" .= makeRequestPayload phrase gloss
-                ]
-          )
+    (phrase,)
       <$> joinGlosses
       <$> entry
       ^.. key "senses" . values . key "glosses"
@@ -361,3 +352,16 @@ systemPrompt = "Estimate the percentage of Americans 10 years or older who know 
 
 joinGlosses :: Value -> Text
 joinGlosses = Text.intercalate "\n" <$> (^.. values . _String)
+
+ensureManifest :: IO ()
+ensureManifest =
+  writeFileLBS "manifest.json"
+    $ encode
+    $ object
+      [ "benchmark"
+          .= object
+            [ "phrase" .= benchmarkPhrase,
+              "gloss" .= benchmarkGloss
+            ],
+        "parts" .= parts
+      ]
