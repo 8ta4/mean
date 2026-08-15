@@ -18,7 +18,7 @@ import Data.List ((!!))
 import Data.Map.Lazy (elems, insert, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
-import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
+import Network.HTTP.Req (GET (GET), HttpConfig (httpConfigRetryPolicy), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath (takeFileName, (</>))
@@ -102,7 +102,7 @@ main = do
                 case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
                   Just filename -> do
                     batchResponse <-
-                      runReq defaultHttpConfig
+                      runReq (defaultHttpConfig {httpConfigRetryPolicy = mempty})
                         $ req
                           POST
                           batchUrl
