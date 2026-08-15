@@ -109,6 +109,7 @@ main = do
                           batchUrl
                           (ReqBodyJson $ makeBatchPayload filename)
                           jsonResponse
+                          -- The API may take 30+ seconds to respond when submitting a batch request.
                           (apiKeyHeader <> responseTimeout maxBound)
                     case (responseBody batchResponse :: Value) ^? key "name" . _String of
                       Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
