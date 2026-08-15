@@ -334,7 +334,7 @@ baseUrl :: Url 'Https
 baseUrl = host /: "v1beta"
 
 model :: Text
-model = "gemini-3.5-flash"
+model = "gemini-3.6-flash"
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
