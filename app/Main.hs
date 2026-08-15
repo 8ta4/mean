@@ -102,6 +102,7 @@ main = do
                 case (responseBody uploadResponse :: Value) ^? key "file" . key "name" . _String of
                   Just filename -> do
                     batchResponse <-
+                      -- Disabling retries prevents submitting multiple batches and getting charged multiple times.
                       runReq (defaultHttpConfig {httpConfigRetryPolicy = mempty})
                         $ req
                           POST
