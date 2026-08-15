@@ -5,11 +5,12 @@ import Control.Concurrent (threadDelay)
 import Control.Foldl (mean)
 import Control.Foldl qualified as Foldl
 import Control.Lens (to, (^..), (^?))
+import Control.Lens.Cons (_last)
 import Control.Lens.Prism (_Just)
 import Crypto.Hash.SHA256 (hashlazy)
 import Data.Aeson (KeyValue ((.=)), ToJSON, Value, decode, decodeFileStrict, decodeStrictText, encode, object)
 import Data.Aeson.Key (fromText)
-import Data.Aeson.Lens (key, nth, values, _String)
+import Data.Aeson.Lens (key, nth, values, _Array, _String)
 import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy (LazyByteString)
 import Data.ByteString.Lazy.Char8 qualified as Char8
@@ -17,7 +18,6 @@ import Data.List ((!!))
 import Data.Map.Lazy (elems, insert, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
-import Data.Text qualified as Text
 import Network.HTTP.Req (GET (GET), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
@@ -263,9 +263,13 @@ processEntry :: Value -> [(Text, Text)]
 processEntry entry = case entry ^? key "word" . _String of
   Just phrase ->
     (phrase,)
-      <$> joinGlosses
       <$> entry
-      ^.. key "senses" . values . key "glosses"
+      ^.. key "senses"
+        . values
+        . key "glosses"
+        . _Array
+        . _last
+        . _String
   _ -> []
 
 makeRequestPayload :: Text -> Text -> Value
@@ -349,9 +353,6 @@ makeBatchPayload filename =
 
 systemPrompt :: Text
 systemPrompt = "Estimate the percentage of Americans 10 years or older who know each meaning."
-
-joinGlosses :: Value -> Text
-joinGlosses = Text.intercalate "\n" <$> (^.. values . _String)
 
 ensureManifest :: IO ()
 ensureManifest =
