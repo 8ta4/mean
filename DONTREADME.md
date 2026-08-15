@@ -295,11 +295,11 @@ If an error occurs, loops on large datasets can cause runaway billing. When some
 
 Yes.
 
-Tier 1 limits enqueued tokens for `gemini-3.6-flash` to 3,000,000 and caps the spend at $10 per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
+Tier 1 limits enqueued tokens for `gemini-3.6-flash` to [3,000,000](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Gemini%203.6%20Flash-,3%2C000%2C000,-Gemini%203.5%20Flash) and caps the spend at [$10](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Tier%201-,%2410,-Tier%202) per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
 
-Tier 2 bumps the limits for `gemini-3.6-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days. If one run is enough, that'd be a batch made in heaven.
+Tier 2 bumps the limits for `gemini-3.6-flash` up by roughly an order of magnitude, raising them to [400,000,000](https://ai.google.dev/gemini-api/docs/rate-limits#tier-2:~:text=Gemini%203.6%20Flash-,400%2C000%2C000,-Gemini%203.5%20Flash) enqueued tokens and [$200](https://ai.google.dev/gemini-api/docs/rate-limits#tier-2:~:text=Tier%202-,%24200,-Tier%203) per 10 minutes. In theory, this boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days. If one run is enough, that'd be a batch made in heaven.
 
-To unlock Tier 2 you need to pay $100 up front, but the full data set will probably cost more than $100 anyway.
+To unlock Tier 2 you need to [pay $100](https://ai.google.dev/gemini-api/docs/rate-limits#:~:text=Tier%202-,Paid%20%24100,-%2B%203%20days%20from) up front, but the full data set will probably cost more than $100 anyway.
 
 > Does `mean` wait for the batch to finish?
 
