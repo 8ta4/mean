@@ -98,21 +98,21 @@ Nah, it's a double. Doubles allow finer ordering.
 
 > What model does `mean` use?
 
-`mean` uses [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash) for these reasons:
+`mean` uses [`gemini-3.6-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash) for these reasons:
 
-- Among models that cost under $10 per million output tokens without batching, have a public API, and offer solid scoring, `gemini-3.5-flash` ranks highest on [Text Arena](https://arena.ai/leaderboard/text).
+- Among models that cost under $10 per million output tokens without batching, have a public API, and offer solid scoring, `gemini-3.6-flash` ranks highest on [Text Arena](https://arena.ai/leaderboard/text).
 
-- `gemini-3.5-flash` is a production model.
+- `gemini-3.6-flash` is a production model.
 
-- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.5-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
+- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.6-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
 
-- `gemini-3.5-flash` allows running at a temperature of 0.
+- `gemini-3.6-flash` allows running at a temperature of 0.
 
 - Setting the thinking level to `minimal` effectively turns off thinking for this task.
 
-- `gemini-3.5-flash` [supports structured outputs](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash#:~:text=Supported-,Structured%20outputs,-Supported).
+- `gemini-3.6-flash` [supports structured outputs](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash#:~:text=Supported-,Structured%20outputs,-Supported).
 
-- `gemini-3.5-flash` [supports the Batch API](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash#:~:text=Consumption%20options-,Batch%20API,-Supported).
+- `gemini-3.6-flash` [supports the Batch API](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash#:~:text=Consumption%20options-,Batch%20API,-Supported).
 
 > Does `mean` use a system prompt?
 
@@ -295,9 +295,9 @@ If an error occurs, loops on large datasets can cause runaway billing. When some
 
 Yes.
 
-Tier 1 limits enqueued tokens for `gemini-3.5-flash` to 3,000,000 and caps the spend at $10 per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
+Tier 1 limits enqueued tokens for `gemini-3.6-flash` to 3,000,000 and caps the spend at $10 per 10 minutes. If enforced strictly, evaluating the full dataset on Tier 1 would theoretically require invoking `mean` dozens of times. Because Google's target turnaround time is 24 hours, completing the whole dataset might take weeks on Tier 1.
 
-Tier 2 bumps the limits for `gemini-3.5-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days. If one run is enough, that'd be a batch made in heaven.
+Tier 2 bumps the limits for `gemini-3.6-flash` up by roughly an order of magnitude, raising them to 400 million enqueued tokens and $200 per ten minutes. In theory, this boost cuts down on the number of manual runs and speeds up the turnaround from weeks to just days. If one run is enough, that'd be a batch made in heaven.
 
 To unlock Tier 2 you need to pay $100 up front, but the full data set will probably cost more than $100 anyway.
 
