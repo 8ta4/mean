@@ -180,13 +180,15 @@ I thought about falling back from `raw_glosses` to `glosses`. I decided not to g
 
 > Are nested glosses concatenated?
 
-Yes.
+No.
 
-Nested glosses get joined using a newline.
+`mean` only looks at the leaf gloss for each sense. Here's why:
 
-For prompts, a newline gives a grammatical break so the glosses don't blend together and mess up the grammar.
+- The model might overinflate a rare meaning's score by using the parent gloss as the evaluation target.
 
-An individual gloss can also have newlines. Two different glosses can still end up with the same combined text. Splitting a key by newlines might not bring back the original list structure. But you can still look up scores by using the same newline join on the dump data.
+- The phrase tends to give the model enough context to figure out the leaf gloss without needing parent glosses.
+
+- Skipping parent glosses saves tokens.
 
 > Is the part of speech sent to the LLM?
 
