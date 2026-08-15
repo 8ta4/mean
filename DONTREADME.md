@@ -28,17 +28,17 @@ No.
 
 ### Coverage
 
-> Does `mean` evaluate senses from WordNet?
+> Does `mean` evaluate meanings from WordNet?
 
 No.
 
 WordNet's coverage is limited. Jokes often use slang and vulgarity.
 
-So, `mean` evaluates senses from a dictionary.
+So, `mean` evaluates meanings from a dictionary.
 
-> Which dictionary does `mean` evaluate senses from?
+> Which dictionary does `mean` evaluate meanings from?
 
-`mean` evaluates senses from English Wiktionary.
+`mean` evaluates meanings from English Wiktionary.
 
 Wiktionary was chosen for these reasons:
 
@@ -46,7 +46,7 @@ Wiktionary was chosen for these reasons:
 
 - The coverage is extensive.
 
-> Can `mean` evaluate senses of non-lemma forms?
+> Can `mean` evaluate meanings of non-lemma forms?
 
 Yes. `mean` looks at both lemma and non‑lemma forms.
 
@@ -70,7 +70,7 @@ No.
 
 > Does `mean` evaluate Wikipedia entries?
 
-Yes. `mean` scores Wikipedia entries by treating their lead sentences as senses.
+Yes. `mean` scores Wikipedia entries by treating their lead sentences as meanings.
 
 ### Cost
 
@@ -104,7 +104,7 @@ Nah, it's a double. Doubles allow finer ordering.
 
 - `gemini-3.6-flash` is a production model.
 
-- Less capable models tend to change their scores dramatically if the order of senses to evaluate gets swapped. `gemini-3.6-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
+- Less capable models tend to change their scores dramatically if the order of meanings to evaluate gets swapped. `gemini-3.6-flash` seems pretty resistant to this order dependency. Even though `mean` keeps the benchmark phrase in a fixed spot, the model's native resistance boosts confidence in the scores.
 
 - `gemini-3.6-flash` allows running at a temperature of 0.
 
@@ -118,7 +118,7 @@ Nah, it's a double. Doubles allow finer ordering.
 
 Yep.
 
-If the list of senses contains words that sound like commands, the model could treat them as instructions rather than just stuff to score. So the system prompt makes it crystal clear what's data and what's instruction.
+If the list of meanings contains words that sound like commands, the model could treat them as instructions rather than just stuff to score. So the system prompt makes it crystal clear what's data and what's instruction.
 
 > Does `mean` use a fixed `seed` for requests?
 
@@ -150,11 +150,11 @@ Yes.
 
 `mean` sets `max_output_tokens` to 128. The longest English phrase in Wiktionary by character count is "when you're up to your neck in alligators, it's hard to remember that your initial objective was to drain the swamp". It takes 51 output tokens to evaluate this phrase. Setting the limit to 128 gives you enough headroom to avoid truncation and acts as a safety net against runaway billing.
 
-> Is the phrase sent to the LLM alongside its sense?
+> Is the phrase sent to the LLM alongside its meaning?
 
 Yes.
 
-A sense alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical sense text.
+A meaning alone might not be enough to uniquely identify what's being evaluated. Different phrases can end up sharing identical meaning text.
 
 > Can a phrase contain multiple words?
 
@@ -198,11 +198,11 @@ Skipping parts of speech saves token usage and cuts down on prompt noise.
 
 Each request in a batch evaluates two items:
 
-- The benchmark phrase and its sense, which set the baseline across requests.
+- The benchmark phrase and its meaning, which set the baseline across requests.
 
-- The target phrase and its sense, which the system pulls while looping through the vocab.
+- The target phrase and its meaning, which the system pulls while looping through the vocab.
 
-> Does `mean` use JSON in a prompt to format the phrases and senses for evaluation?
+> Does `mean` use JSON in a prompt to format the phrases and meanings for evaluation?
 
 No.
 
@@ -216,9 +216,9 @@ The benchmark phrase is "touchstone". This word was chosen because it has the fo
 
 - It means "benchmark".
 
-> Does `mean` use the literal or figurative sense of "touchstone" as a benchmark?
+> Does `mean` use the literal or figurative meaning of "touchstone" as a benchmark?
 
-`mean` uses the figurative sense of "touchstone" as a benchmark.
+`mean` uses the figurative meaning of "touchstone" as a benchmark.
 
 The literal meaning is a rare technical term.
 
@@ -234,19 +234,19 @@ The benchmark phrase gets scored first.
 
 Scoring the benchmark phrase first makes sure it's evaluated before the target phrase's score is generated. This way, the benchmark phrase's context stays more alike across requests compared to using the reverse order.
 
-> Are the concatenated glosses included in the model's structured output?
+> Are the meanings included in the model's structured output?
 
 No.
 
 The structured output is an object that maps the benchmark phrase and the target phrase to their scores.
 
-The concatenated glosses are omitted from the model's output. Here's why:
+The meanings are omitted from the model's output. Here's why:
 
 - It cuts down on output tokens.
 
 - It helps the model focus on scoring the phrases.
 
-The concatenated glosses are tracked outside the structured output, using the metadata key instead.
+The meanings are tracked outside the structured output, using the metadata key instead.
 
 > What's the normalization formula?
 
@@ -289,7 +289,7 @@ No.
 
 `mean` submits at most one batch per command invocation.
 
-If an error occurs, loops on large datasets can cause runaway billing. When some senses don't have scores, you can manually run `mean` again.
+If an error occurs, loops on large datasets can cause runaway billing. When some meanings don't have scores, you can manually run `mean` again.
 
 > Does `mean` require Tier 2?
 
