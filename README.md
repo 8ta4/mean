@@ -51,6 +51,6 @@ Once the API batches finish, `mean` will drop these files into your current dire
 
 - `manifest.json` holds the benchmark phrase and gloss along with URLs and hashes for the split Wiktionary dump. The dump exceeds GitHub's file size limits.
 
-- `mean.json` maps each phrase to an object whose keys are its concatenated glosses and whose values are scores.
+- `mean.json` maps each phrase to an object whose keys are its glosses and whose values are scores.
 
-- `raw.json` maps each phrase to an object whose keys are its concatenated glosses and whose values are raw score pairs for the benchmark and target phrases. If you adjust the formula, you can run the normalization again without incurring another batch API charge.
+- `raw.json` maps each phrase to an object whose keys are its glosses and whose values are raw score pairs for the benchmark and target phrases. If you adjust the formula, you can run the normalization again without incurring another batch API charge.
