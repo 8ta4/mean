@@ -8,7 +8,7 @@ import Relude
 main :: IO ()
 main = do
   apiKeyHeader <- loadApiKeyHeader
-  let payload = makeRequestPayload "mean" "To intend.\n(transitive) To intend, to plan (to do); to have as one's intention."
+  let payload = makeRequestPayload "mean" "To intend, to plan (to do); to have as one's intention."
   putTextLn "Payload:"
   print payload
   putTextLn "Response:"
