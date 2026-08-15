@@ -18,7 +18,7 @@ import Data.List ((!!))
 import Data.Map.Lazy (elems, insert, insertWith, lookup, singleton, union)
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn)
-import Network.HTTP.Req (GET (GET), HttpConfig (httpConfigRetryPolicy), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, runReq, useHttpsURI, (/:), (=:))
+import Network.HTTP.Req (GET (GET), HttpConfig (httpConfigRetryPolicy), JsonResponse, NoReqBody (NoReqBody), Option, POST (POST), Req, ReqBodyFile (ReqBodyFile), ReqBodyJson (ReqBodyJson), Scheme (Https), Url, defaultHttpConfig, header, https, ignoreResponse, jsonResponse, lbsResponse, req, responseBody, responseHeader, responseTimeout, runReq, useHttpsURI, (/:), (=:))
 import Relude
 import System.Directory (createDirectoryIfMissing, doesFileExist, getFileSize, getHomeDirectory, getTemporaryDirectory)
 import System.FilePath (takeFileName, (</>))
@@ -109,7 +109,7 @@ main = do
                           batchUrl
                           (ReqBodyJson $ makeBatchPayload filename)
                           jsonResponse
-                          apiKeyHeader
+                          (apiKeyHeader <> responseTimeout maxBound)
                     case (responseBody batchResponse :: Value) ^? key "name" . _String of
                       Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
                       _ -> pure ()
