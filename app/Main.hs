@@ -110,7 +110,7 @@ main = do
                           (ReqBodyJson $ makeBatchPayload filename)
                           jsonResponse
                           -- The API may take 30+ seconds to respond when submitting a batch request.
-                          (apiKeyHeader <> responseTimeout maxBound)
+                          (apiKeyHeader <> responseTimeout timeout)
                     case (responseBody batchResponse :: Value) ^? key "name" . _String of
                       Just batchName -> writeFileText batchIdPath $ (splitOn "/" batchName) !! 1
                       _ -> pure ()
@@ -341,6 +341,9 @@ baseUrl = host /: "v1beta"
 
 model :: Text
 model = "gemini-3.6-flash"
+
+timeout :: Int
+timeout = 24 * 60 * 60 * 10 ^ (6 :: Int)
 
 makeBatchPayload :: Text -> Value
 makeBatchPayload filename =
