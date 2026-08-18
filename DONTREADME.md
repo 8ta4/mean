@@ -331,7 +331,7 @@ No.
 
 When it's gathering data, `mean` puts the growing JSON file into `~/.local/state/mean/`. `mean` only drops completed files into the current working directory when the JSON file is complete.
 
-> Does a crash during a write operation corrupt the accumulated results?
+> Does a crash during a write operation corrupt the accumulated results? (Planned)
 
 No.
 
