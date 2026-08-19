@@ -317,7 +317,7 @@ The polling interval is set to 10 seconds.
 
 Polling every second might overload the API.
 
-## Resumability
+## Resuming
 
 > Can `mean` keep going if it gets interrupted?
 
