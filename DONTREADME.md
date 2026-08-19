@@ -289,7 +289,7 @@ No.
 
 `mean` submits at most one batch per command invocation.
 
-If an error occurs, loops on large datasets can cause runaway billing. When some meanings don't have scores, you can manually run `mean` again.
+If an error occurs, loops on large datasets can cause runaway billing.
 
 > Does `mean` require Tier 2?
 
