@@ -16,7 +16,7 @@ The dataset is in the [mean-data](https://github.com/8ta4/mean-data) repo.
 
 1. Make sure you're using a Mac with Apple silicon.
 
-1. Make sure your Google AI Studio project is on Tier 2.
+1. Make sure the billing account linked to your Google AI Studio project is on Tier 2.
 
 1. Install [Homebrew](https://brew.sh/#install).
 
